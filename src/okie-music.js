@@ -206,7 +206,7 @@
     // the big picture on the left: the icon you chose for this player (an Animara one moves with it), else the note
     var heroIc = shell.el.querySelector('.dt-iconbg');
     function paintHero() { if (heroIc) UI.setIcon(heroIc, playerId ? UI.deviceIcon(playerId, 'music', 170) : UI.icon('music', 170)); }
-    var DT = g.OkieMotor.detail, iconBtn = DT && DT.openIconPicker ? h('button.dt-circ', { type: 'button', 'aria-label': t('dt.icon'), title: t('dt.icon'), html: UI.icon('star', 20), onclick: function () { if (playerId) DT.openIconPicker(ctx, playerId, function () { paintHero(); }); } }) : null;
+    var DT = g.OkieMotor.detail, iconBtn = DT && DT.openIconPicker ? h('button.dt-circ', { type: 'button', 'aria-label': t('dt.icon'), title: t('dt.icon'), html: UI.icon('star', 20), onclick: function () { if (playerId) DT.openIconPicker(ctx, playerId, function () { paintHero(); if (art.classList.contains('noimg')) showArt(); }); } }) : null;
     if (iconBtn && heart && heart.parentNode) heart.parentNode.insertBefore(iconBtn, heart);      // the heart pins the player to the favorites, like the heart in every device screen
     function paintHeart() { if (!heart) return; var on = !!(playerId && ctx.favorites.has(playerId)); heart.classList.toggle('on', on); heart.setAttribute('aria-pressed', on ? 'true' : 'false'); }
     var body = shell.body, root = h('div.mu'), call = function (svc, data) { return ctx.call('media_player', svc, Object.assign({ entity_id: playerId }, data || {})).catch(function () { ctx.toast('error', t('app.music')); }); };
@@ -239,9 +239,16 @@
       [np && np.art, np && np.art2].forEach(function (u) { if (!u) return; add(u); if (/^\//.test(u) && hs && hs.hassUrl) { try { add(hs.hassUrl(u)); } catch (e) { /* no address */ } } });
       return out;
     }
-    function showArt() {      // the next way to load it, or none
-      if (artAt < artTries.length) { art.classList.remove('noimg'); artImg.setAttribute('src', artTries[artAt]); }
-      else { artImg.removeAttribute('src'); art.classList.add('noimg'); }
+    var artIc = h('span.mu-artic', { style: { position: 'absolute', inset: '0', display: 'none', alignItems: 'center', justifyContent: 'center', zIndex: '1', pointerEvents: 'none' } });
+    art.appendChild(artIc);
+    function showArt() {      // the next way to load it, or none: then the icon you chose for the player (an Animara one moves with it)
+      if (artAt < artTries.length) { art.classList.remove('noimg'); artIc.style.display = 'none'; artImg.setAttribute('src', artTries[artAt]); }
+      else {
+        artImg.removeAttribute('src'); art.classList.add('noimg');
+        var own = playerId && UI.iconOverride(playerId);
+        if (own) { artIc.style.display = 'flex'; UI.setIcon(artIc, UI.deviceIcon(playerId, 'music', Math.max(60, Math.round((art.offsetWidth || 240) * 0.62)))); }
+        else artIc.style.display = 'none';
+      }
     }
     artImg.addEventListener('error', function () { artAt++; showArt(); });
     artImg.addEventListener('load', function () { var u = artImg.getAttribute('src'); if (u) paintTint(u); });      // the colour of the screen follows the cover that did load
@@ -605,7 +612,7 @@
         devBtn.hidden = !(np.sources.length || true);
         var track = np.artist + '|' + np.title; if (track !== lastTrack) { lastTrack = track; if (lyricsOn) loadLyrics(); }
         if (shell && shell.setSubtitle) shell.setSubtitle(np.playing ? np.artist : '');
-        paintHero();
+        paintHero(); if (artIc.style.display !== 'none') UI.setIcon(artIc, artIc._okieIcon || '');
         if (lf) lf.sync();
       }
       tick();

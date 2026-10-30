@@ -403,7 +403,7 @@
   function coverCard(ctx, item) {
     var t = function (k, v) { return core.t(k, ctx.lang(), v); };
     var spot = /spotify/i.test(item.id + ' ' + item.name);
-    var art = h('div.cv-art', { html: UI.icon('speaker', 44) }), cap = h('div.cv-cap'), npT = h('div.cv-title'), npS = h('div.cv-artist');
+    var art = h('div.cv-art'), cap = h('div.cv-cap'), npT = h('div.cv-title'), npS = h('div.cv-artist');
     var logo = h('span.cv-logo', { html: CV_SPOTIFY }); if (!spot) logo.style.display = 'none';
     var fill = h('i'), bar = h('div.cv-bar', { role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100' }, fill), tl = h('div.cv-time'), tr = h('div.cv-time.r');
     var pw = h('button.rc-pw', { type: 'button', 'aria-label': t('d.power'), html: UI.icon('power', 24), onclick: function (e) { e.stopPropagation(); ctx.call('media_player', 'turn_on', { entity_id: item.id }).catch(function () {}); } });
@@ -439,11 +439,31 @@
       play.innerHTML = playing ? CV_PAUSE : CV_PLAY;
       play.disabled = prev.disabled = next.disabled = gone || off;
       paintTime();
-      var pic = !gone && !off && a.entity_picture_local ? a.entity_picture_local : (!gone && !off && a.entity_picture ? a.entity_picture : '');
-      if (pic !== picture) { picture = pic; art.innerHTML = ''; if (pic) { var img = h('img', { src: pic, alt: '' }); img.addEventListener('error', function () { art.innerHTML = UI.icon('speaker', 44); picture = ''; }); art.appendChild(img); } else art.innerHTML = UI.icon('speaker', 44); }
+      paintCover(ctx, art, item, st, 'speaker', 84);      // the big square: a bigger icon
     }
     update();
     return { el: el, update: update };
+  }
+  /** The cover of a player in a card: every way to load it (each picture by this page's path and by Home Assistant's address), else the icon you chose for it (an
+   *  Animara one moves), else the usual one. Called on every update; it only starts over when the pictures change. */
+  function paintCover(ctx, art, item, st, fallback, size) {
+    var a = (st && st.attributes) || {}, s = st && st.state, show = !!st && s !== 'unavailable' && s !== 'unknown' && s !== 'off' && s !== 'standby';
+    var hs = ctx.hass(), urls = [];
+    if (show) [a.entity_picture_local, a.entity_picture].forEach(function (u) {
+      if (!u || urls.indexOf(u) >= 0) return; urls.push(u);
+      if (/^\//.test(u) && hs && hs.hassUrl) { try { var f = hs.hassUrl(u); if (urls.indexOf(f) < 0) urls.push(f); } catch (e) { /* no address */ } }
+    });
+    var key = urls.join('|');
+    var icon = function () { UI.setIcon(art, UI.deviceIcon(item.id, fallback, size)); };
+    if (art._cov === key) { if (!art.querySelector('img')) icon(); return; }      // same pictures: an icon only gets the new state
+    art._cov = key; art._okieIcon = null; art.innerHTML = '';
+    var i = 0;
+    (function next() {
+      if (i >= urls.length) { art.innerHTML = ''; art._okieIcon = null; icon(); return; }
+      var img = h('img', { src: urls[i++], alt: '' });
+      img.addEventListener('error', function () { if (art._cov === key) next(); });
+      art.innerHTML = ''; art.appendChild(img);
+    })();
   }
   /** A speaker or music player (Spotify ...): one row - the cover, who and what is playing, play-pause and next. Power shows only while it is off and only when it can be switched on. */
   function musicCard(ctx, item) {
@@ -455,9 +475,6 @@
     var open = h('div.rc-mopen', null, art, h('div.rc-mid', null, cap, h('div.rc-np', null, npT, npS)));
     var el = h('div.rc.rc-media.rc-music', null, open, h('div.rc-ctl', null, pw, play, next));
     openIt(ctx, open, item); open.style.cursor = 'pointer';
-    var picture = '';
-    var plainIcon = function () { UI.setIcon(art, UI.deviceIcon(item.id, 'speaker', 38)); };
-    plainIcon();
     function update() {
       var st = ctx.state(item.id); if (!st) return;
       var a = st.attributes || {}, s = st.state, gone = s === 'unavailable' || s === 'unknown', off = s === 'off' || s === 'standby', playing = s === 'playing';
@@ -469,9 +486,7 @@
       pw.style.display = off && canOn ? '' : 'none'; play.style.display = next.style.display = off && canOn ? 'none' : '';
       play.innerHTML = UI.icon(playing ? 'pause' : 'play', 24);
       play.disabled = next.disabled = gone || off;
-      var pic = !gone && !off && a.entity_picture_local ? a.entity_picture_local : (!gone && !off && a.entity_picture ? a.entity_picture : '');
-      if (pic !== picture) { picture = pic; art.innerHTML = ''; art._okieIcon = null; if (pic) { var img = h('img', { src: pic, alt: '' }); img.addEventListener('error', function () { picture = ''; plainIcon(); }); art.appendChild(img); } else plainIcon(); }
-      else if (!picture) plainIcon();
+      paintCover(ctx, art, item, st, 'speaker', 38);
     }
     update();      // filled at once, not on the next state change
     return { el: el, update: update };
@@ -489,9 +504,6 @@
     var top = h('div.rc-top', null, art, h('div.rc-ttl', null, name, what), pw), bot = h('div.rc-bot', null, h('div.rc-np', null, npT, npS), play, next);
     var el = h('div.rc.rc-media', null, top, bot);
     openIt(ctx, top, item); el.classList.remove('open'); top.style.cursor = 'pointer';
-    var picture = '';
-    var plainIcon = function () { UI.setIcon(art, UI.deviceIcon(item.id, isTv ? 'tv' : 'speaker', 38)); };
-    plainIcon();
     function update() {
       var st = ctx.state(item.id); if (!st) return;
       var a = st.attributes || {}, s = st.state, gone = s === 'unavailable' || s === 'unknown', off = s === 'off' || s === 'standby', playing = s === 'playing';
@@ -502,9 +514,7 @@
       npS.textContent = gone || off ? '' : [a.media_artist || a.media_series_title || '', a.app_name && a.media_title ? a.app_name : ''].filter(Boolean).join(' · ');
       play.innerHTML = UI.icon(playing ? 'pause' : 'play', 26);
       play.disabled = next.disabled = gone || off;
-      var pic = !gone && !off && a.entity_picture_local ? a.entity_picture_local : (!gone && !off && a.entity_picture ? a.entity_picture : '');
-      if (pic !== picture) { picture = pic; art.innerHTML = ''; art._okieIcon = null; if (pic) { var img = h('img', { src: pic, alt: '' }); img.addEventListener('error', function () { picture = ''; plainIcon(); }); art.appendChild(img); } else plainIcon(); }
-      else if (!picture) plainIcon();      // no cover art: the icon (an Animara one follows the state)
+      paintCover(ctx, art, item, st, isTv ? 'tv' : 'speaker', 38);      // the cover, else your icon (an Animara one follows the state)
     }
     return { el: el, update: update };
   }

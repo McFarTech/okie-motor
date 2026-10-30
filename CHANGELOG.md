@@ -2,6 +2,12 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.306 (2026-10-30)
+
+**No cover? Your icon instead.**
+- The players in a room (the big cover card, the speaker row and the TV card) and the cover square of the Music screen show the icon you chose for the player when there is no cover or it does not load, an Animara one moving with the music
+- Room cards try every way to load a cover too (each picture by this page's path and by Home Assistant's address)
+
 ## 0.55.305 (2026-10-30)
 
 **The Music cover tries every way to load.**
