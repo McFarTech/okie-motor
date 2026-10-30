@@ -153,3 +153,20 @@ test('fmtTime and playPos: the time line of the big cover card', () => {
   assert.equal(R.isTvItem({ id: 'media_player.spotify_alex', name: 'Spotify Alex' }), false);
   assert.equal(R.isTvItem({ id: 'media_player.living_room_tv', name: 'Living Room TV' }), true);
 });
+
+test('a room keeps the icon or picture you chose for it', () => {
+  const R = require('../src/okie-rooms.js');
+  const rooms = [{ id: 'cctv', name: 'CCTV', icon: '' }, { id: 'living-room', name: 'Living Room', icon: '' }];
+  const out = R.withLook(rooms, { cctv: 'camera', 'living-room': 'mdi:sofa' }, { cctv: '/local/rooms/cctv.jpg' });
+  assert.equal(out[0].icon, 'camera');
+  assert.equal(out[0].photo, '/local/rooms/cctv.jpg');
+  assert.equal(out[1].icon, 'mdi:sofa');
+  assert.equal(out[1].photo, undefined);
+  assert.equal(R.roomIcon(out[0]), 'camera', 'the chosen icon wins over the guess from the name');
+  assert.equal(R.roomIcon(R.withLook(rooms, {}, {})[1]), 'tv', 'without a choice the name still decides');
+  const bad = R.withLook(rooms, { cctv: '<b>' }, { cctv: 'javascript:alert(1)', 'living-room': '/local/x.jpg") ; background:red' });
+  assert.equal(bad[0], rooms[0], 'markup and odd addresses are ignored');
+  assert.equal(bad[1], rooms[1]);
+  assert.equal(R.withLook(rooms, { cctv: 'camera' }, {}, n => n === 'tv')[0], rooms[0], 'an icon the card cannot draw is ignored');
+  assert.equal(R.withLook(rooms, { cctv: '' }, { cctv: '' })[0], rooms[0], 'cleared choices fall back');
+});

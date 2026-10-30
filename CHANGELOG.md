@@ -2,6 +2,12 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.303 (2026-10-30)
+
+**Your own icon or picture for a room.**
+- In a room tap the pencil, then Icon or picture: pick one of the card's icons, type any Home Assistant icon (mdi:sofa), or give a picture (/local/rooms/cctv.jpg) that fills the left side of the room. Use the original icon puts the guess back
+- The choice shows in the room, the room list and the dock, and follows you to every screen like the room names
+
 ## 0.55.302 (2026-10-30)
 
 **Animara icons for your devices.**

@@ -156,6 +156,7 @@
   };
 
   function icon(name, size, extra) {
+    if (!ICONS[name] && isMdi(name)) { var m = mdiIcon(name, size); if (m) return m; }      // a Home Assistant icon you chose (mdi:sofa)
     var inner = ICONS[name] || ICONS.eye;
     var s = size || 24;
     return '<svg class="oi' + (extra ? ' ' + extra : '') + '" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
@@ -210,6 +211,10 @@
   // A device can carry an icon you chose: one of the card's own (a name of ICONS, or of the coloured
   // drawings of okie-icons) or a Material Design icon ("mdi:sofa") drawn by Home Assistant's <ha-icon>.
   var MDI_RE = /^[a-z0-9]+:[a-z0-9-]+$/;
+  // the card's own icons offered when you choose one for a device or a room
+  var ICON_CHOICES = ['bulb', 'plug', 'toggle', 'power', 'tv', 'speaker', 'music', 'film', 'cast', 'tablet', 'camera', 'doorbell', 'bell', 'lock', 'key', 'door', 'window', 'garage', 'blinds', 'thermostat', 'snowflake', 'flame', 'fan', 'drop', 'wind', 'vacuum', 'bolt', 'battery', 'sun', 'moon', 'home', 'homeroom', 'heart', 'star', 'shield', 'person', 'motion', 'eye', 'gauge', 'clock', 'book', 'spark'];
+  /** A picture you can put behind a room: a path of Home Assistant (/local/...) or an https address, nothing that could break out of url("..."). */
+  function isPhotoUrl(u) { return typeof u === 'string' && /^(\/|https:\/\/)[^"'()\s<>\\]+$/.test(u.trim()); }
   function isMdi(name) { return typeof name === 'string' && MDI_RE.test(name) && name.indexOf(':') > 0; }
   /** Which icon you chose for an entity, '' for none. Pure, tested.
    *  own: the icon set on the device screen (settings.deviceIcons[id]) — wins;
@@ -548,7 +553,7 @@
     attachScrollbar: attachScrollbar, onTapOrHold: onTapOrHold, debounce: debounce, rafBatch: rafBatch, guard: guard,
     screenRect: screenRect, reportsUnzoomed: reportsUnzoomed,
     isMdi: isMdi, pickIcon: pickIcon, setIconSource: setIconSource, iconOverride: iconOverride, mdiIcon: mdiIcon, deviceIcon: deviceIcon, haIconAvailable: haIconAvailable,
-    isAnimara: isAnimara, animaraAvailable: animaraAvailable, animaraIcons: animaraIcons, animaraSlot: animaraSlot, setIcon: setIcon, setHassSource: setHassSource, setAnimaraKey: setAnimaraKey,
+    ICON_CHOICES: ICON_CHOICES, isPhotoUrl: isPhotoUrl, isAnimara: isAnimara, animaraAvailable: animaraAvailable, animaraIcons: animaraIcons, animaraSlot: animaraSlot, setIcon: setIcon, setHassSource: setHassSource, setAnimaraKey: setAnimaraKey,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { g.OkieMotor = g.OkieMotor || {}; g.OkieMotor.ui = api; }

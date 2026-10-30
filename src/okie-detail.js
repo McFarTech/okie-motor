@@ -433,7 +433,7 @@
       setTimeout(function () { try { input.focus(); input.select(); } catch (e) { /* no focus */ } }, 60);
     }
     // ---- the pencil > Icon: one of the card's own icons, or any Home Assistant icon (mdi:...), kept for your user like the names
-    var ICON_CHOICES = ['bulb', 'plug', 'toggle', 'power', 'tv', 'speaker', 'music', 'film', 'cast', 'tablet', 'camera', 'doorbell', 'bell', 'lock', 'key', 'door', 'window', 'garage', 'blinds', 'thermostat', 'snowflake', 'flame', 'fan', 'drop', 'wind', 'vacuum', 'bolt', 'battery', 'sun', 'moon', 'home', 'homeroom', 'heart', 'star', 'shield', 'person', 'motion', 'eye', 'gauge', 'clock', 'book', 'spark'].filter(function (n) { return !!UI.ICONS[n]; });
+    var ICON_CHOICES = UI.ICON_CHOICES.filter(function (n) { return !!UI.ICONS[n]; });
     function redrawIcon() { var s = ctx.state(id) || st; UI.setIcon(iconBg, UI.deviceIcon(id, UI.domainIcon(item.domain, (s.attributes || {}).device_class || item.deviceClass, s.state), 170)); }
     function openIcon() {
       var own = (ctx.settings.get().deviceIcons || {})[id] || '', sheet = null;

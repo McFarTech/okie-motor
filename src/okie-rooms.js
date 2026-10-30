@@ -160,10 +160,27 @@
   /** A TV (or screen) and not a speaker or music player. */
   function isTvItem(item) { return item.deviceClass === 'tv' || /tv|roku|crystal|samsung|display|fernseh/i.test(item.name + ' ' + item.id); }
 
+  /** The icon and the picture you chose for a room (room > pencil > Icon or picture) win over the one guessed from its name. Pure, tested.
+   *  okIcon(name): is this an icon the card can draw (default: a plain name or a prefixed one like mdi:sofa). */
+  var PHOTO_RE = /^(\/|https:\/\/)[^"'()\s<>\\]+$/;
+  function withLook(rooms, icons, photos, okIcon) {
+    icons = icons || {}; photos = photos || {};
+    okIcon = okIcon || function (n) { return /^[a-z][a-z0-9_-]*$/.test(n) || /^[a-z0-9]+:[a-z0-9-]+$/.test(n); };
+    return rooms.map(function (r) {
+      var ic = typeof icons[r.id] === 'string' ? icons[r.id].trim() : '', ph = typeof photos[r.id] === 'string' ? photos[r.id].trim() : '';
+      var useIc = !!ic && okIcon(ic), usePh = !!ph && PHOTO_RE.test(ph);
+      if (!useIc && !usePh) return r;
+      var o = Object.assign({}, r);
+      if (useIc) o.icon = ic;
+      if (usePh) o.photo = ph;
+      return o;
+    });
+  }
+
   /** The rooms that are not hidden. */
   function visibleRooms(rooms, hidden) { var h = {}; [].concat(hidden || []).forEach(function (id) { h[id] = true; }); return rooms.filter(function (r) { return !h[r.id]; }); }
 
-  var api = { fmtTime: fmtTime, playPos: playPos, isTvItem: isTvItem, applyNames: applyNames, visibleRooms: visibleRooms, canTall: canTall, resolveStyle: resolveStyle, DEVICE_DOMAINS: DEVICE_DOMAINS, isDeviceDomain: isDeviceDomain, applyEdits: applyEdits, toggleDevice: toggleDevice, applyOrder: applyOrder, moveId: moveId, applyRoomOrder: applyRoomOrder, mergeOrder: mergeOrder, slug: slug, normalizeRooms: normalizeRooms, buildRooms: buildRooms, roomIcon: roomIcon, summarize: summarize };
+  var api = { withLook: withLook, fmtTime: fmtTime, playPos: playPos, isTvItem: isTvItem, applyNames: applyNames, visibleRooms: visibleRooms, canTall: canTall, resolveStyle: resolveStyle, DEVICE_DOMAINS: DEVICE_DOMAINS, isDeviceDomain: isDeviceDomain, applyEdits: applyEdits, toggleDevice: toggleDevice, applyOrder: applyOrder, moveId: moveId, applyRoomOrder: applyRoomOrder, mergeOrder: mergeOrder, slug: slug, normalizeRooms: normalizeRooms, buildRooms: buildRooms, roomIcon: roomIcon, summarize: summarize };
   if (isNode) { module.exports = api; return; }
   if (typeof document === 'undefined') return;
 
@@ -172,7 +189,7 @@
 
   core.registerStrings('en', {
     'b.rooms': 'Rooms', 'rm.sub': '{n} devices · {on} on', 'rm.sub1': '1 device · {on} on', 'rm.sub0': 'No devices yet',
-    'rm.live': 'Live', 'rm.rename': 'Rename this room', 'rm.rename_save': 'Save', 'rm.rename_orig': 'Use the original name', 'rm.rename_name': 'Name of the room',
+    'rm.live': 'Live', 'rm.rename': 'Rename this room', 'rm.look': 'Icon or picture', 'rm.look_mdi': 'Or any Home Assistant icon, like mdi:sofa', 'rm.look_photo': 'Or a picture behind the room (/local/... or https://...)', 'rm.look_orig': 'Use the original icon', 'rm.rename_save': 'Save', 'rm.rename_orig': 'Use the original name', 'rm.rename_name': 'Name of the room',
     'rm.style_row': 'Row', 'rm.style_tall': 'Tall', 'rm.style_large': 'Large', 'rm.style_title': 'Card type',
     'rm.reorder': 'Edit this room', 'rm.done': 'Done', 'rm.up': 'Move up', 'rm.down': 'Move down', 'rm.top': 'Move to the top', 'rm.remove': 'Take out of this room', 'rm.drag': 'Drag to move',
     'rm.to_right': 'Move to the right', 'rm.to_left': 'Move to the left', 'rm.fav_title': 'Favorites', 'rm.in_fav': '{n} favorites', 'rm.add_fav': 'Add or remove favorites', 'rm.add_room': 'New room', 'rm.new_title': 'New room', 'rm.new_name': 'Name of the room', 'rm.new_make': 'Add', 'rm.hidden': 'Hidden rooms', 'rm.show_again': 'Show again', 'rm.unfav': 'Take out of the favorites', 'rm.hide_room': 'Remove this room',
@@ -183,7 +200,7 @@
   });
   core.registerStrings('de', {
     'b.rooms': 'Räume', 'rm.sub': '{n} Geräte · {on} an', 'rm.sub1': '1 Gerät · {on} an', 'rm.sub0': 'Noch keine Geräte',
-    'rm.live': 'Live', 'rm.rename': 'Raum umbenennen', 'rm.rename_save': 'Speichern', 'rm.rename_orig': 'Ursprünglichen Namen verwenden', 'rm.rename_name': 'Name des Raums',
+    'rm.live': 'Live', 'rm.rename': 'Raum umbenennen', 'rm.look': 'Symbol oder Bild', 'rm.look_mdi': 'Oder ein beliebiges Home-Assistant-Symbol, z. B. mdi:sofa', 'rm.look_photo': 'Oder ein Bild hinter dem Raum (/local/... oder https://...)', 'rm.look_orig': 'Ursprüngliches Symbol verwenden', 'rm.rename_save': 'Speichern', 'rm.rename_orig': 'Ursprünglichen Namen verwenden', 'rm.rename_name': 'Name des Raums',
     'rm.style_row': 'Zeile', 'rm.style_tall': 'Groß', 'rm.style_large': 'Sehr groß', 'rm.style_title': 'Kartentyp',
     'rm.reorder': 'Raum bearbeiten', 'rm.done': 'Fertig', 'rm.up': 'Nach oben', 'rm.down': 'Nach unten', 'rm.top': 'Ganz nach oben', 'rm.remove': 'Aus diesem Raum nehmen', 'rm.drag': 'Zum Verschieben ziehen',
     'rm.to_right': 'Nach rechts verschieben', 'rm.to_left': 'Nach links verschieben', 'rm.fav_title': 'Favoriten', 'rm.in_fav': '{n} Favoriten', 'rm.add_fav': 'Favoriten hinzufügen oder entfernen', 'rm.add_room': 'Neuer Raum', 'rm.new_title': 'Neuer Raum', 'rm.new_name': 'Name des Raums', 'rm.new_make': 'Hinzufügen', 'rm.hidden': 'Ausgeblendete Räume', 'rm.show_again': 'Wieder anzeigen', 'rm.unfav': 'Aus den Favoriten nehmen', 'rm.hide_room': 'Diesen Raum entfernen',
@@ -313,7 +330,7 @@
     });
     return map;
   }
-  function roomsEvery(ctx) { var s = ctx.settings.get(); return buildRooms(s.rooms, areaMap(ctx), s.roomEdits, s.roomsExtra, s.roomNames); }
+  function roomsEvery(ctx) { var s = ctx.settings.get(); return withLook(buildRooms(s.rooms, areaMap(ctx), s.roomEdits, s.roomsExtra, s.roomNames), s.roomIcons, s.roomPhotos, function (n) { return !!UI.ICONS[n] || UI.isMdi(n); }); }
   function roomsNow(ctx) { var s = ctx.settings.get(); return applyRoomOrder(visibleRooms(roomsEvery(ctx), s.roomsHidden), s.roomsOrder); }
   /** The item of a device: the card's own, or (for a device named in the rooms list that the card hides, e.g. a diagnostic one) one made from its state. */
   function itemOf(ctx, id) {
@@ -758,7 +775,7 @@
     var room0 = roomsNow(ctx).filter(function (r) { return r.id === roomId; })[0] || { id: roomId, name: roomId, ids: [], icon: '' };
     var idx = Math.max(0, roomsNow(ctx).map(function (r) { return r.id; }).indexOf(roomId));
     var editing = false, pen = null, room = room0;
-    var shell = g.OkieMotor.appshell.create(container, ctx, { id: room0.id, title: room0.name, subtitle: subtitle(ctx, room0), icon: roomIcon(room0), gradient: GRADIENTS[idx % GRADIENTS.length], tabs: [], onTab: function () {},
+    var shell = g.OkieMotor.appshell.create(container, ctx, { id: room0.id, title: room0.name, subtitle: subtitle(ctx, room0), icon: roomIcon(room0), photo: room0.photo || '', gradient: GRADIENTS[idx % GRADIENTS.length], tabs: [], onTab: function () {},
       actions: [{ icon: 'pencil', label: t('rm.reorder'), onClick: function () { toggleEdit(); } }] });
     pen = shell.el.querySelector('.dt-acts .dt-circ');
     var registry = new Map(), tl = TL.create(ctx, registry);
@@ -786,6 +803,9 @@
       var ren = h('button.rm-ren', { type: 'button', html: UI.icon('pencil', 18) + '<span></span>', onclick: openRename });
       ren.lastChild.textContent = t('rm.rename');
       list.appendChild(ren);
+      var look = h('button.rm-ren', { type: 'button', html: UI.icon('star', 18) + '<span></span>', onclick: openLook });
+      look.lastChild.textContent = t('rm.look');
+      list.appendChild(look);
       items.forEach(function (x) {
         var card = UI.guard(function () {
           var c = cardFor(ctx, x);
@@ -825,6 +845,38 @@
       if (names[room.id]) box.appendChild(h('button.rm-pr', { type: 'button', onclick: function () { save(''); } }, h('span.pt', null, h('b', null, t('rm.rename_orig')), h('span', null, room.baseName))));
       sheet = ctx.sheet({ title: t('rm.rename'), content: function () { return box; } });
       setTimeout(function () { try { input.focus(); input.select(); } catch (e) { /* no focus */ } }, 60);
+    }
+    /** The room's own icon (one of the card's, or any Home Assistant icon) or a picture behind it. */
+    function applyLook() {
+      room = roomsNow(ctx).filter(function (r) { return r.id === roomId; })[0] || room;
+      var hero = shell.el.querySelector('.dt-hero'), ib = shell.el.querySelector('.dt-iconbg'), old = hero && hero.querySelector('.dt-photo');
+      if (ib) ib.innerHTML = UI.icon(roomIcon(room), 170);
+      if (old) old.remove();
+      if (room.photo && hero) { hero.insertBefore(h('div.dt-photo', { style: { backgroundImage: 'url("' + room.photo + '")' } }), hero.firstChild); if (ib) ib.style.display = 'none'; }
+      else if (ib) ib.style.display = '';
+    }
+    function openLook() {
+      var s0 = ctx.settings.get(), own = (s0.roomIcons || {})[room.id] || '', ownPh = (s0.roomPhotos || {})[room.id] || '', sheet = null;
+      function saveIcon(v) { var o = {}; o[room.id] = v; ctx.settings.set({ roomIcons: o }); applyLook(); if (ctx.haptic) ctx.haptic(8); if (sheet) sheet.close('saved'); }
+      function savePhoto(v) { var o = {}; o[room.id] = v; ctx.settings.set({ roomPhotos: o }); applyLook(); if (sheet) sheet.close('saved'); }
+      var grid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(6,minmax(38px,52px))', justifyContent: 'center', gap: '8px', marginBottom: '14px', width: '352px', maxWidth: '100%' } });
+      UI.ICON_CHOICES.filter(function (n) { return !!UI.ICONS[n]; }).forEach(function (n) {
+        grid.appendChild(h('button', { type: 'button', 'aria-label': n, title: n, 'aria-pressed': own === n ? 'true' : 'false', onclick: function () { saveIcon(n); },
+          style: { aspectRatio: '1', minHeight: '38px', borderRadius: '14px', border: own === n ? '2px solid #fff' : '0', background: own === n ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }, html: UI.icon(n, 26) }));
+      });
+      var box = h('div', null, grid), hint = function (k) { return h('div', { style: { fontSize: '13px', opacity: '.75', margin: '0 0 6px 4px' } }, t(k)); };
+      if (UI.haIconAvailable && UI.haIconAvailable()) {
+        var mi = h('input.rm-q', { type: 'text', value: UI.isMdi(own) ? own : '', placeholder: 'mdi:sofa', 'aria-label': t('rm.look_mdi'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
+        var mok = h('button.rm-mk', { type: 'button', onclick: function () { var v = mi.value.trim().toLowerCase(); if (v && v.indexOf(':') < 0) v = 'mdi:' + v; if (!UI.isMdi(v)) { mi.focus(); return; } saveIcon(v); } }, t('rm.rename_save'));
+        mi.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); mok.click(); } });
+        box.appendChild(hint('rm.look_mdi')); box.appendChild(h('div.rm-newrow', null, mi, mok));
+      }
+      var pi = h('input.rm-q', { type: 'text', value: ownPh, placeholder: '/local/rooms/' + (room.baseName || room.name || 'room').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.jpg', 'aria-label': t('rm.look_photo'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
+      var pok = h('button.rm-mk', { type: 'button', onclick: function () { var v = pi.value.trim(); if (v && !UI.isPhotoUrl(v)) { pi.focus(); return; } savePhoto(v); } }, t('rm.rename_save'));
+      pi.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); pok.click(); } });
+      box.appendChild(hint('rm.look_photo')); box.appendChild(h('div.rm-newrow', null, pi, pok));
+      if (own || ownPh) box.appendChild(h('button.rm-pr', { type: 'button', onclick: function () { var o1 = {}, o2 = {}; o1[room.id] = ''; o2[room.id] = ''; ctx.settings.set({ roomIcons: o1, roomPhotos: o2 }); applyLook(); if (sheet) sheet.close('saved'); } }, h('span.pt', null, h('b', null, t('rm.look_orig')))));
+      sheet = ctx.sheet({ title: t('rm.look'), content: function () { return box; } });
     }
     // ---- hold a card to arrange, like on the Home Screen: the same hold, the same bar at the bottom middle (Reset, Done) and a tap away from the list ends it ----
     var AR = g.OkieMotor.arrange, barEl = null, snapRoom = null, holder = null;
@@ -918,7 +970,7 @@
   // ------------------------------------------------ across devices ----
   // What you arrange here (rooms, their devices and order, the card types) is kept in Home Assistant's own storage for your user, so the phone, the iPad and the
   // wall tablet show the same thing. Newest change wins; a device pulls on start, when it comes back to the foreground and every five minutes.
-  var SYNC_KEY = 'okie_motor_rooms', SYNC_FIELDS = ['rooms', 'roomEdits', 'roomOrder', 'roomsOrder', 'cardStyle', 'roomsExtra', 'roomsHidden', 'roomNames'];
+  var SYNC_KEY = 'okie_motor_rooms', SYNC_FIELDS = ['rooms', 'roomEdits', 'roomOrder', 'roomsOrder', 'cardStyle', 'roomsExtra', 'roomsHidden', 'roomNames', 'roomIcons', 'roomPhotos'];
   function snapshot(ctx) { var s = ctx.settings.get(), o = {}; SYNC_FIELDS.forEach(function (k) { o[k] = s[k]; }); return o; }
   function hasData(snap) { return SYNC_FIELDS.some(function (k) { var v = snap[k]; return Array.isArray(v) ? v.length > 0 : (v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v); }); }
   var applying = false;
@@ -949,13 +1001,13 @@
     function visible() { if (document.visibilityState === 'visible') pullNow(ctx); }
     document.addEventListener('visibilitychange', visible);
     pullNow(ctx);
-    var off = ctx.settings.on('change', function (p) { if (p && (p.rooms !== undefined || p.roomsExtra !== undefined || p.roomsHidden !== undefined || p.roomsOrder !== undefined || p.roomEdits !== undefined || p.roomNames !== undefined)) syncApps(ctx); });
+    var off = ctx.settings.on('change', function (p) { if (p && (p.rooms !== undefined || p.roomsExtra !== undefined || p.roomsHidden !== undefined || p.roomsOrder !== undefined || p.roomEdits !== undefined || p.roomNames !== undefined || p.roomIcons !== undefined || p.roomPhotos !== undefined)) syncApps(ctx); });
     var timer = setInterval(function () { syncApps(ctx); }, 60000);      // an area changed in Home Assistant
     return { dispose: function () { off(); offSync(); clearTimeout(pushTimer); clearInterval(pullTimer); document.removeEventListener('visibilitychange', visible); clearInterval(timer); Object.keys(registered).forEach(function (id) { registered[id].off(); }); registered = {}; } };
   };
   api.gripButton = gripButton; api.sideButton = sideButton;
   api.styleOf = styleOf; api.listCard = listCard; api.richCard = richCard; api.addButton = addButton;
   api.createSorter = createSorter; api.endDrag = function () { if (activeSort) activeSort(true); }; api.tileOrder = tileOrder; api.rooms = roomsNow; api.renderCards = renderCards; api.signature = signature; api.roomItems = roomItems; api.renderRoom = renderRoom;
-  g.OkieMotor.defaults = Object.assign(g.OkieMotor.defaults || {}, { rooms: [], roomOrder: {}, roomsOrder: [], roomEdits: {}, cardStyle: {}, roomsExtra: [], roomsHidden: [], roomNames: {} });
+  g.OkieMotor.defaults = Object.assign(g.OkieMotor.defaults || {}, { rooms: [], roomOrder: {}, roomsOrder: [], roomEdits: {}, cardStyle: {}, roomsExtra: [], roomsHidden: [], roomNames: {}, roomIcons: {}, roomPhotos: {} });
   g.OkieMotor.rooms = api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);
