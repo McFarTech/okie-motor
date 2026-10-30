@@ -2,6 +2,12 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.304 (2026-10-30)
+
+**The Music screen shows your icon, and its cover no longer breaks.**
+- The star next to the heart chooses the icon of the playing speaker (the card's icons, Animara or any Home Assistant icon); the big picture on the left shows it
+- The cover is taken from Home Assistant's own copy first. When a picture does not load the other one is tried, then a plain frosted square, never a broken image
+
 ## 0.55.303 (2026-10-30)
 
 **Your own icon or picture for a room.**

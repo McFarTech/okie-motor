@@ -48,7 +48,7 @@
     if (dur != null) pos = Math.min(pos, dur); pos = Math.max(0, pos);
     var f = a.supported_features || 0;
     return {
-      state: st.state, playing: playing, title: a.media_title || '', artist: a.media_artist || '', album: a.media_album_name || '', art: a.entity_picture || a.entity_picture_local || '',
+      state: st.state, playing: playing, title: a.media_title || '', artist: a.media_artist || '', album: a.media_album_name || '', art: a.entity_picture_local || a.entity_picture || '', art2: a.entity_picture_local && a.entity_picture && a.entity_picture !== a.entity_picture_local ? a.entity_picture : '',
       duration: dur, position: pos, volume: isFinite(parseFloat(a.volume_level)) ? parseFloat(a.volume_level) : null, muted: !!a.is_volume_muted, shuffle: !!a.shuffle, repeat: a.repeat || 'off',
       source: a.source || '', sources: Array.isArray(a.source_list) ? a.source_list.slice() : [], app: a.app_name || '',
       browse: canBrowse(f), phase: libraryPhase(st),
@@ -202,7 +202,12 @@
   function renderMusic(container, ctx) {
     var t = function (k, v) { return core.t(k, ctx.lang(), v); }, disposed = false, lyricsOn = false, playerId = pickPlayer(ctx.hass().states, ctx.store.get('music.player', null)), lastTrack = '', lyr = null, lyrKey = '', lyrToken = 0, activeLine = -2, tint = null, tintFor = '', dragging = false, bars = [], lf = null, np = null;
     var shell = g.OkieMotor.appshell.create(container, ctx, { id: 'music', title: t('app.music'), subtitle: '', icon: 'music', gradient: ['#0f2a22', '#1db954'], slim: true, tabs: [], heroDomain: 'media_player', onTab: function () {}, actions: [{ icon: 'heart', label: t('dt.fav_add'), onClick: function () { if (!playerId) { ctx.toast('error', t('mu.nothing')); return; } ctx.favorites.toggle(playerId); paintHeart(); } }] });
-    var heart = shell.el.querySelector('.dt-acts .dt-circ');      // the heart pins the player to the favorites, like the heart in every device screen
+    var heart = shell.el.querySelector('.dt-acts .dt-circ');
+    // the big picture on the left: the icon you chose for this player (an Animara one moves with it), else the note
+    var heroIc = shell.el.querySelector('.dt-iconbg');
+    function paintHero() { if (heroIc) UI.setIcon(heroIc, playerId ? UI.deviceIcon(playerId, 'music', 170) : UI.icon('music', 170)); }
+    var DT = g.OkieMotor.detail, iconBtn = DT && DT.openIconPicker ? h('button.dt-circ', { type: 'button', 'aria-label': t('dt.icon'), title: t('dt.icon'), html: UI.icon('star', 20), onclick: function () { if (playerId) DT.openIconPicker(ctx, playerId, function () { paintHero(); }); } }) : null;
+    if (iconBtn && heart && heart.parentNode) heart.parentNode.insertBefore(iconBtn, heart);      // the heart pins the player to the favorites, like the heart in every device screen
     function paintHeart() { if (!heart) return; var on = !!(playerId && ctx.favorites.has(playerId)); heart.classList.toggle('on', on); heart.setAttribute('aria-pressed', on ? 'true' : 'false'); }
     var body = shell.body, root = h('div.mu'), call = function (svc, data) { return ctx.call('media_player', svc, Object.assign({ entity_id: playerId }, data || {})).catch(function () { ctx.toast('error', t('app.music')); }); };
 
@@ -227,6 +232,12 @@
     var top = h('div.mu-top', null, devBtn, h('div.mu-pill', null, libBtn, castBtn, volBtn));
     var art = h('div.mu-art'), artImg = h('img', { alt: '', decoding: 'async', draggable: false }), title = h('div.mu-t'), artist = h('div.mu-a'), moreBtn = h('button.mu-more', { type: 'button', 'aria-label': t('mu.more'), onclick: openMore, html: UI.icon('more', 20) });
     art.appendChild(artImg); art.appendChild(h('div.mu-frost'));
+    // a cover that does not load (an outside address the browser blocks, an expired link): try the other picture of the player, then show none
+    artImg.addEventListener('error', function () {
+      var alt = np && np.art2 ? mediaUrl(np.art2) : '';
+      if (alt && artImg.getAttribute('src') !== alt) { artImg.setAttribute('src', alt); return; }
+      artImg.removeAttribute('src'); art.classList.add('noimg');
+    });
     art.appendChild(h('button.mu-cta', { type: 'button', onclick: openLib, html: UI.icon('grid', 20) + '<span>' + t('mu.browse') + '</span>' }));      // an empty player offers your Spotify instead of a blank picture
     var ti = h('div.mu-ti', null, h('div.mu-txt', null, title, artist), moreBtn);
     var lyBox = h('div.mu-ly', { hidden: true }), lyHead = h('div.mu-lh'), lyList = h('div.mu-ll');
@@ -586,6 +597,7 @@
         devBtn.hidden = !(np.sources.length || true);
         var track = np.artist + '|' + np.title; if (track !== lastTrack) { lastTrack = track; if (lyricsOn) loadLyrics(); }
         if (shell && shell.setSubtitle) shell.setSubtitle(np.playing ? np.artist : '');
+        paintHero();
         if (lf) lf.sync();
       }
       tick();
@@ -614,7 +626,7 @@
     '.mu-rb{width:max(42px,calc(50*var(--u)));height:max(42px,calc(50*var(--u)));border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;}.mu-rb[hidden]{display:none;}',
     '.mu-pill{display:flex;align-items:center;height:max(42px,calc(50*var(--u)));border-radius:9999px;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);}.mu-pill-b{display:grid;place-items:center;width:max(46px,calc(62*var(--u)));height:100%;border-radius:9999px;color:#fff;}.mu-pill-b:disabled{opacity:.4;}',
     '.mu-stage{position:relative;flex:1;min-height:0;margin:calc(-12*var(--u)) 0 calc(18*var(--u));}',
-    '.mu-art{position:absolute;left:50%;top:0;transform:translateX(-50%);border-radius:calc(30*var(--u));overflow:hidden;background:rgba(255,255,255,.12);box-shadow:0 calc(18*var(--u)) calc(44*var(--u)) rgba(0,0,0,.32);z-index:1;}.mu-art[hidden]{display:none;}.mu-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}.mu-art.noimg::before{content:"";position:absolute;inset:0;background:linear-gradient(150deg,rgba(255,255,255,.22),rgba(255,255,255,.05));}',
+    '.mu-art{position:absolute;left:50%;top:0;transform:translateX(-50%);border-radius:calc(30*var(--u));overflow:hidden;background:rgba(255,255,255,.12);box-shadow:0 calc(18*var(--u)) calc(44*var(--u)) rgba(0,0,0,.32);z-index:1;}.mu-art[hidden]{display:none;}.mu-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}.mu-art.noimg img{display:none;}.mu-art.noimg::before{content:"";position:absolute;inset:0;background:linear-gradient(150deg,rgba(255,255,255,.22),rgba(255,255,255,.05));}',
     '.mu-frost{display:none;position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(to bottom,rgba(214,226,238,0),rgba(214,226,238,.42) 62%,rgba(214,226,238,.5));-webkit-backdrop-filter:blur(calc(14*var(--u))) saturate(1.1);backdrop-filter:blur(calc(14*var(--u))) saturate(1.1);-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 55%);mask-image:linear-gradient(to bottom,transparent 0,#000 55%);}',
     '.mu-info{position:absolute;left:calc(25*var(--u));right:calc(25*var(--u));bottom:calc(-6*var(--u));z-index:2;}',
     '.mu-ti{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:calc(20*var(--u));}.mu-ti[hidden]{display:none;}.mu-txt{min-width:0;}',

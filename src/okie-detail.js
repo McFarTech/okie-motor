@@ -433,50 +433,8 @@
       setTimeout(function () { try { input.focus(); input.select(); } catch (e) { /* no focus */ } }, 60);
     }
     // ---- the pencil > Icon: one of the card's own icons, or any Home Assistant icon (mdi:...), kept for your user like the names
-    var ICON_CHOICES = UI.ICON_CHOICES.filter(function (n) { return !!UI.ICONS[n]; });
     function redrawIcon() { var s = ctx.state(id) || st; UI.setIcon(iconBg, UI.deviceIcon(id, UI.domainIcon(item.domain, (s.attributes || {}).device_class || item.deviceClass, s.state), 170)); }
-    function openIcon() {
-      var own = (ctx.settings.get().deviceIcons || {})[id] || '', sheet = null;
-      function save(name) { var o = {}; o[id] = name; ctx.settings.set({ deviceIcons: o }); redrawIcon(); if (ctx.haptic) ctx.haptic(8); if (sheet) sheet.close('saved'); }
-      var grid = h('div.dt-icgrid', { style: { display: 'grid', gridTemplateColumns: 'repeat(6,minmax(38px,52px))', justifyContent: 'center', gap: '8px', marginBottom: '14px', width: '352px', maxWidth: '100%' } });
-      ICON_CHOICES.forEach(function (n) {
-        grid.appendChild(h('button', { type: 'button', 'aria-label': n, title: n, 'aria-pressed': own === n ? 'true' : 'false', onclick: function () { save(n); },
-          style: { aspectRatio: '1', minHeight: '38px', borderRadius: '14px', border: own === n ? '2px solid #fff' : '0', background: own === n ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }, html: UI.icon(n, 26) }));
-      });
-      var box = h('div', null);
-      if (UI.animaraAvailable()) {      // Animara's animated icons, shown live in this device's own state
-        var list = UI.animaraIcons(), aq = h('input.rm-q', { type: 'search', placeholder: t('dt.icon_animara_find'), 'aria-label': t('dt.icon_animara_find'), autocomplete: 'off', spellcheck: 'false' });
-        var agrid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4,minmax(64px,1fr))', gap: '8px', width: '352px', maxWidth: '100%', marginBottom: '6px' } }), amore = h('div', { style: { fontSize: '12px', opacity: '.65', margin: '0 0 12px 4px' } });
-        var aBtn = function (key, label) {
-          var val = 'animara:' + key, sel = own === val, pic = h('span', { style: { width: '52px', height: '52px', display: 'block' } });
-          var b = h('button', { type: 'button', 'aria-pressed': sel ? 'true' : 'false', title: label, onclick: function () { save(val); },
-            style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '8px 4px', borderRadius: '14px', border: sel ? '2px solid #fff' : '0', background: sel ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', cursor: 'pointer', font: 'inherit', fontSize: '11px', lineHeight: '1.2', textAlign: 'center' } }, pic, h('span', null, label));
-          UI.setIcon(pic, UI.animaraSlot(id, key, 52));
-          return b;
-        };
-        var drawA = function () {
-          var q = aq.value.trim().toLowerCase(), hits = list.filter(function (x) { return !q || (x.name + ' ' + x.category + ' ' + x.key).toLowerCase().indexOf(q) >= 0; });
-          agrid.innerHTML = '';
-          if (!q) agrid.appendChild(aBtn('auto', t('dt.icon_animara_auto')));
-          hits.slice(0, q ? 24 : 11).forEach(function (x) { agrid.appendChild(aBtn(x.key, x.name)); });
-          var rest = hits.length - (q ? 24 : 11); amore.textContent = rest > 0 ? t('dt.icon_more', { n: rest }) : '';
-        };
-        var at = 0; aq.addEventListener('input', function () { clearTimeout(at); at = setTimeout(drawA, 150); });
-        box.appendChild(h('div', { style: { fontSize: '13px', fontWeight: '700', margin: '0 0 8px 4px' } }, t('dt.icon_animara')));
-        if (list.length > 11) box.appendChild(aq);
-        box.appendChild(agrid); box.appendChild(amore); drawA();
-      }
-      box.appendChild(grid);
-      if (UI.haIconAvailable()) {
-        var input = h('input.rm-q', { type: 'text', value: UI.isMdi(own) ? own : '', placeholder: t('dt.icon_mdi'), 'aria-label': t('dt.icon_mdi_hint'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
-        var ok = h('button.rm-mk', { type: 'button', onclick: function () { var v = input.value.trim().toLowerCase(); if (v && v.indexOf(':') < 0) v = 'mdi:' + v; if (!UI.isMdi(v)) { input.focus(); return; } save(v); } }, t('dt.rename_save'));
-        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); ok.click(); } });
-        box.appendChild(h('div', { style: { fontSize: '13px', opacity: '.75', margin: '0 0 6px 4px' } }, t('dt.icon_mdi_hint')));
-        box.appendChild(h('div.rm-newrow', null, input, ok));
-      }
-      if (own) box.appendChild(h('button.rm-pr', { type: 'button', onclick: function () { save(''); } }, h('span.pt', null, h('b', null, t('dt.icon_orig')))));
-      sheet = ctx.sheet({ title: t('dt.icon'), content: function () { return box; } });
-    }
+    function openIcon() { openIconPicker(ctx, id, redrawIcon); }
     var ebar = h('div.dt-ebar', null,
       h('button.dt-eb', { type: 'button', onclick: openRename, html: UI.icon('pencil', 16) + '<span>' + t('dt.rename') + '</span>' }),
       h('button.dt-eb', { type: 'button', onclick: openIcon, html: UI.icon('star', 16) + '<span>' + t('dt.icon') + '</span>' }),
@@ -563,6 +521,52 @@
     return { update: update, beforeClose: function () { return (tab === 'controls' && control && control.rollOut) ? control.rollOut() : null; }, dispose: function () { token++; if (wx) { wx.dispose(); if (wx.dots.parentNode) wx.dots.remove(); } if (active && active.dispose) active.dispose(); sbar.destroy(); vidA.removeAttribute('src'); vidB.removeAttribute('src'); } };
   }
 
+  /** The icon picker of a device (device screen > pencil > Icon, the Music screen): the card's icons, Animara's, or any Home Assistant icon. onSaved runs after a choice. */
+  function openIconPicker(ctx, id, onSaved) {
+    var t = function (k, v) { return core.t(k, ctx.lang(), v); };
+    var ICON_CHOICES = UI.ICON_CHOICES.filter(function (n) { return !!UI.ICONS[n]; });
+    var own = (ctx.settings.get().deviceIcons || {})[id] || '', sheet = null;
+    function save(name) { var o = {}; o[id] = name; ctx.settings.set({ deviceIcons: o }); if (onSaved) onSaved(name); if (ctx.haptic) ctx.haptic(8); if (sheet) sheet.close('saved'); }
+    var grid = h('div.dt-icgrid', { style: { display: 'grid', gridTemplateColumns: 'repeat(6,minmax(38px,52px))', justifyContent: 'center', gap: '8px', marginBottom: '14px', width: '352px', maxWidth: '100%' } });
+    ICON_CHOICES.forEach(function (n) {
+      grid.appendChild(h('button', { type: 'button', 'aria-label': n, title: n, 'aria-pressed': own === n ? 'true' : 'false', onclick: function () { save(n); },
+        style: { aspectRatio: '1', minHeight: '38px', borderRadius: '14px', border: own === n ? '2px solid #fff' : '0', background: own === n ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }, html: UI.icon(n, 26) }));
+    });
+    var box = h('div', null);
+    if (UI.animaraAvailable()) {      // Animara's animated icons, shown live in this device's own state
+      var list = UI.animaraIcons(), aq = h('input.rm-q', { type: 'search', placeholder: t('dt.icon_animara_find'), 'aria-label': t('dt.icon_animara_find'), autocomplete: 'off', spellcheck: 'false' });
+      var agrid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4,minmax(64px,1fr))', gap: '8px', width: '352px', maxWidth: '100%', marginBottom: '6px' } }), amore = h('div', { style: { fontSize: '12px', opacity: '.65', margin: '0 0 12px 4px' } });
+      var aBtn = function (key, label) {
+        var val = 'animara:' + key, sel = own === val, pic = h('span', { style: { width: '52px', height: '52px', display: 'block' } });
+        var b = h('button', { type: 'button', 'aria-pressed': sel ? 'true' : 'false', title: label, onclick: function () { save(val); },
+          style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '8px 4px', borderRadius: '14px', border: sel ? '2px solid #fff' : '0', background: sel ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', cursor: 'pointer', font: 'inherit', fontSize: '11px', lineHeight: '1.2', textAlign: 'center' } }, pic, h('span', null, label));
+        UI.setIcon(pic, UI.animaraSlot(id, key, 52));
+        return b;
+      };
+      var drawA = function () {
+        var q = aq.value.trim().toLowerCase(), hits = list.filter(function (x) { return !q || (x.name + ' ' + x.category + ' ' + x.key).toLowerCase().indexOf(q) >= 0; });
+        agrid.innerHTML = '';
+        if (!q) agrid.appendChild(aBtn('auto', t('dt.icon_animara_auto')));
+        hits.slice(0, q ? 24 : 11).forEach(function (x) { agrid.appendChild(aBtn(x.key, x.name)); });
+        var rest = hits.length - (q ? 24 : 11); amore.textContent = rest > 0 ? t('dt.icon_more', { n: rest }) : '';
+      };
+      var at = 0; aq.addEventListener('input', function () { clearTimeout(at); at = setTimeout(drawA, 150); });
+      box.appendChild(h('div', { style: { fontSize: '13px', fontWeight: '700', margin: '0 0 8px 4px' } }, t('dt.icon_animara')));
+      if (list.length > 11) box.appendChild(aq);
+      box.appendChild(agrid); box.appendChild(amore); drawA();
+    }
+    box.appendChild(grid);
+    if (UI.haIconAvailable()) {
+      var input = h('input.rm-q', { type: 'text', value: UI.isMdi(own) ? own : '', placeholder: t('dt.icon_mdi'), 'aria-label': t('dt.icon_mdi_hint'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
+      var ok = h('button.rm-mk', { type: 'button', onclick: function () { var v = input.value.trim().toLowerCase(); if (v && v.indexOf(':') < 0) v = 'mdi:' + v; if (!UI.isMdi(v)) { input.focus(); return; } save(v); } }, t('dt.rename_save'));
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); ok.click(); } });
+      box.appendChild(h('div', { style: { fontSize: '13px', opacity: '.75', margin: '0 0 6px 4px' } }, t('dt.icon_mdi_hint')));
+      box.appendChild(h('div.rm-newrow', null, input, ok));
+    }
+    if (own) box.appendChild(h('button.rm-pr', { type: 'button', onclick: function () { save(''); } }, h('span.pt', null, h('b', null, t('dt.icon_orig')))));
+    sheet = ctx.sheet({ title: t('dt.icon'), content: function () { return box; } });
+  }
+
   function renderCompact(el, ctx, id) {
     var item = ctx.engine.getItem(id);
     var c = DM.forItem(item.domain)(ctx, item, { compact: true });
@@ -625,5 +629,5 @@
   ].join('\n');
   g.OkieMotor.extraCss = (g.OkieMotor.extraCss || []).concat([CSS]);
 
-  g.OkieMotor.detail = { createWheel: createWheel, render: render, renderCompact: renderCompact, prefetch: prefetch, sparkline: sparkline, CSS: CSS, _fetchHistory: fetchHistory };
+  g.OkieMotor.detail = { openIconPicker: openIconPicker, createWheel: createWheel, render: render, renderCompact: renderCompact, prefetch: prefetch, sparkline: sparkline, CSS: CSS, _fetchHistory: fetchHistory };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
