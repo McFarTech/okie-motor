@@ -461,7 +461,7 @@
     var t = function (k, v) { return core.t(k, ctx.lang(), v); };
     var isTv = isTvItem(item);
     if (!isTv) return musicCard(ctx, item);
-    var art = h('div.rc-art', { html: UI.icon(isTv ? 'tv' : 'speaker', 38) }), name = h('div.rc-name', null, item.name), what = h('div.rc-sub');
+    var art = h('div.rc-art', { html: UI.deviceIcon(item.id, isTv ? 'tv' : 'speaker', 38) }), name = h('div.rc-name', null, item.name), what = h('div.rc-sub');
     var pw = h('button.rc-pw', { type: 'button', 'aria-label': t('d.power'), html: UI.icon('power', 20), onclick: function (e) { e.stopPropagation(); var on = ((ctx.state(item.id) || {}).state || 'off') !== 'off'; ctx.call('media_player', on ? 'turn_off' : 'turn_on', { entity_id: item.id }).catch(function () {}); } });
     var npT = h('b'), npS = h('span');
     var play = h('button.rc-tr', { type: 'button', 'aria-label': 'Play / pause', onclick: function (e) { e.stopPropagation(); ctx.call('media_player', 'media_play_pause', { entity_id: item.id }).catch(function () {}); } });
@@ -481,7 +481,7 @@
       play.innerHTML = UI.icon(playing ? 'pause' : 'play', 26);
       play.disabled = next.disabled = gone || off;
       var pic = !gone && !off && a.entity_picture_local ? a.entity_picture_local : (!gone && !off && a.entity_picture ? a.entity_picture : '');
-      if (pic !== picture) { picture = pic; art.innerHTML = ''; if (pic) { var img = h('img', { src: pic, alt: '' }); img.addEventListener('error', function () { art.innerHTML = UI.icon(isTv ? 'tv' : 'speaker', 38); picture = ''; }); art.appendChild(img); } else art.innerHTML = UI.icon(isTv ? 'tv' : 'speaker', 38); }
+      if (pic !== picture) { picture = pic; art.innerHTML = ''; if (pic) { var img = h('img', { src: pic, alt: '' }); img.addEventListener('error', function () { art.innerHTML = UI.deviceIcon(item.id, isTv ? 'tv' : 'speaker', 38); picture = ''; }); art.appendChild(img); } else art.innerHTML = UI.deviceIcon(item.id, isTv ? 'tv' : 'speaker', 38); }
     }
     return { el: el, update: update };
   }
@@ -615,7 +615,7 @@
       shown.forEach(function (c) {
         var st = ctx.state(c.it.id), stateText = st ? L.stateLabel(st.state, ctx.lang()) : '', ic = c.it.domain === 'gadget' ? (c.it.deviceClass === 'light' ? 'grid' : 'tv') : UI.domainIcon(c.it.domain, c.it.deviceClass, st && st.state);
         list.appendChild(h('button.rm-pr' + (c.on ? '.on' : ''), { type: 'button', dataset: { id: c.it.id }, 'aria-pressed': c.on ? 'true' : 'false', onclick: function () { cfg.toggle(c.it.id); if (ctx.haptic) ctx.haptic(8); draw(); } },
-          h('span.pi', { html: ic ? UI.icon(ic, 20) : '' }),
+          h('span.pi', { html: ic ? UI.deviceIcon(c.it.id, ic, 20) : '' }),
           h('span.pt', null, h('b', null, c.it.name), h('span', null, [c.it.area, stateText].filter(Boolean).join(' · '))),
           h('span.ck', { html: UI.icon('check', 16) })));
       });

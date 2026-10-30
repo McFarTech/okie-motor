@@ -18,7 +18,7 @@
   core.registerStrings('en', {
     'dt.controls': 'Controls', 'dt.context': 'Context', 'dt.history': 'History', 'dt.schedule': 'Schedule', 'dt.settings': 'Settings',
     'dt.related': 'Related', 'dt.same_area': 'In this room', 'dt.nothing_related': 'No scene, script or automation uses this device yet.', 'dt.nothing_related_hint': 'This tab lists the ones that do, and the scenes and scripts of its room, each with a Run button. Add one in Home Assistant that uses this device and it shows up here.', 'dt.run': 'Run', 'dt.running': 'Started',
-    'dt.edit': 'Edit this screen', 'dt.rename': 'Rename', 'dt.rename_orig': 'Original name', 'dt.rename_save': 'Save', 'dt.hero_hint': 'Drag to resize the picture', 'dt.hero_reset': 'Reset size', 'dt.done': 'Done',
+    'dt.edit': 'Edit this screen', 'dt.rename': 'Rename', 'dt.rename_orig': 'Original name', 'dt.rename_save': 'Save', 'dt.hero_hint': 'Drag to resize the picture', 'dt.hero_reset': 'Reset size', 'dt.done': 'Done', 'dt.icon': 'Icon', 'dt.icon_orig': 'Original icon', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Or any Home Assistant icon, like mdi:sofa',
     'dt.24h': '24 hours', 'dt.7d': '7 days', 'dt.30d': '30 days', 'dt.changes': 'Changes', 'dt.avg_run': 'Avg. on-time', 'dt.active': 'Active', 'dt.min': 'Min', 'dt.max': 'Max', 'dt.avg': 'Avg',
     'dt.by_hour': 'Time of day', 'dt.durations': 'Time in each state', 'dt.loading': 'Loading history…', 'dt.no_history': 'No history for this period.', 'dt.history_failed': 'Could not load history.',
     'dt.sched_none': 'No schedules for this device yet.', 'dt.sched_add': 'New schedule', 'dt.sched_time': 'Time', 'dt.sched_days': 'Days', 'dt.sched_action': 'Action', 'dt.sched_save': 'Save schedule',
@@ -32,7 +32,7 @@
   core.registerStrings('de', {
     'dt.controls': 'Steuerung', 'dt.context': 'Kontext', 'dt.history': 'Verlauf', 'dt.schedule': 'Zeitplan', 'dt.settings': 'Einstellungen',
     'dt.related': 'Zugehörig', 'dt.same_area': 'In diesem Raum', 'dt.nothing_related': 'Noch keine Szene, kein Skript und keine Automation nutzt dieses Gerät.', 'dt.nothing_related_hint': 'Dieser Tab zeigt die, die es nutzen, und die Szenen und Skripte seines Raums, jeweils mit einem Ausführen-Knopf. Lege in Home Assistant eine an, die dieses Gerät nutzt, und sie erscheint hier.', 'dt.run': 'Ausführen', 'dt.running': 'Gestartet',
-    'dt.edit': 'Diesen Bildschirm bearbeiten', 'dt.rename': 'Umbenennen', 'dt.rename_orig': 'Originalname', 'dt.rename_save': 'Speichern', 'dt.hero_hint': 'Ziehen, um das Bild zu verändern', 'dt.hero_reset': 'Größe zurücksetzen', 'dt.done': 'Fertig',
+    'dt.edit': 'Diesen Bildschirm bearbeiten', 'dt.rename': 'Umbenennen', 'dt.rename_orig': 'Originalname', 'dt.rename_save': 'Speichern', 'dt.hero_hint': 'Ziehen, um das Bild zu verändern', 'dt.hero_reset': 'Größe zurücksetzen', 'dt.done': 'Fertig', 'dt.icon': 'Symbol', 'dt.icon_orig': 'Ursprüngliches Symbol', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Oder ein beliebiges Home-Assistant-Symbol, z. B. mdi:sofa',
     'dt.24h': '24 Stunden', 'dt.7d': '7 Tage', 'dt.30d': '30 Tage', 'dt.changes': 'Wechsel', 'dt.avg_run': 'Ø Einschaltdauer', 'dt.active': 'Aktiv', 'dt.min': 'Min', 'dt.max': 'Max', 'dt.avg': 'Ø',
     'dt.by_hour': 'Tageszeit', 'dt.durations': 'Zeit je Zustand', 'dt.loading': 'Verlauf wird geladen…', 'dt.no_history': 'Kein Verlauf in diesem Zeitraum.', 'dt.history_failed': 'Verlauf konnte nicht geladen werden.',
     'dt.sched_none': 'Noch keine Zeitpläne für dieses Gerät.', 'dt.sched_add': 'Neuer Zeitplan', 'dt.sched_time': 'Uhrzeit', 'dt.sched_days': 'Tage', 'dt.sched_action': 'Aktion', 'dt.sched_save': 'Zeitplan speichern',
@@ -190,7 +190,7 @@
     function entry(id) {
       var it = ctx.engine.getItem(id); if (!it) return null;
       var svcName = it.domain === 'automation' ? 'trigger' : 'turn_on';
-      return h('div.ctxrow', null, h('span', { html: UI.icon(UI.domainIcon(it.domain), 22) }), h('span.ctxname', null, it.name),
+      return h('div.ctxrow', null, h('span', { html: UI.deviceIcon(it.id, UI.domainIcon(it.domain), 22) }), h('span.ctxname', null, it.name),
         h('button.act', { onclick: function () { ctx.call(it.domain, svcName, { entity_id: id }).then(function () { ctx.toast('success', t('dt.running') + ': ' + it.name); ctx.engine.recordUse(id); }, function () { ctx.toast('error', it.name); }); } }, h('span', { html: UI.icon('play', 16) }), h('span', null, t('dt.run'))));
     }
     function draw() {
@@ -400,7 +400,7 @@
     hero.appendChild(h('div.dt-top', null, back, h('div.dt-head', null, title, sub), h('div.dt-acts', null, pen, heart)));      // the pencil next to the heart: the size of the picture and the name
     var wx = null;      // the weather screen has two pages: the first fills the hero, the second is the Controls tab (okie-weather)
     if (item.domain === 'weather' && g.OkieMotor.weather && g.OkieMotor.weather.create) { try { wx = g.OkieMotor.weather.create(ctx, item); hero.insertBefore(wx.sky, hero.firstChild); hero.appendChild(wx.hero); } catch (e) { wx = null; } }
-    iconBg.innerHTML = UI.icon(UI.domainIcon(item.domain, item.deviceClass, st.state), 170);
+    iconBg.innerHTML = UI.deviceIcon(id, UI.domainIcon(item.domain, item.deviceClass, st.state), 170);
 
     var bar = h('div.dt-bar', { role: 'tablist' });
     // on a phone the five tabs sit behind a round bubble (it shows the open tab); a tap opens it into the row, a choice or a tap elsewhere closes it
@@ -431,8 +431,31 @@
       sheet = ctx.sheet({ title: t('dt.rename'), content: function () { return box; } });
       setTimeout(function () { try { input.focus(); input.select(); } catch (e) { /* no focus */ } }, 60);
     }
+    // ---- the pencil > Icon: one of the card's own icons, or any Home Assistant icon (mdi:...), kept for your user like the names
+    var ICON_CHOICES = ['bulb', 'plug', 'toggle', 'power', 'tv', 'speaker', 'music', 'film', 'cast', 'tablet', 'camera', 'doorbell', 'bell', 'lock', 'key', 'door', 'window', 'garage', 'blinds', 'thermostat', 'snowflake', 'flame', 'fan', 'drop', 'wind', 'vacuum', 'bolt', 'battery', 'sun', 'moon', 'home', 'homeroom', 'heart', 'star', 'shield', 'person', 'motion', 'eye', 'gauge', 'clock', 'book', 'spark'].filter(function (n) { return !!UI.ICONS[n]; });
+    function redrawIcon() { var s = ctx.state(id) || st; iconBg.innerHTML = UI.deviceIcon(id, UI.domainIcon(item.domain, (s.attributes || {}).device_class || item.deviceClass, s.state), 170); }
+    function openIcon() {
+      var own = (ctx.settings.get().deviceIcons || {})[id] || '', sheet = null;
+      function save(name) { var o = {}; o[id] = name; ctx.settings.set({ deviceIcons: o }); redrawIcon(); if (ctx.haptic) ctx.haptic(8); if (sheet) sheet.close('saved'); }
+      var grid = h('div.dt-icgrid', { style: { display: 'grid', gridTemplateColumns: 'repeat(6,minmax(38px,52px))', justifyContent: 'center', gap: '8px', marginBottom: '14px', width: '352px', maxWidth: '100%' } });
+      ICON_CHOICES.forEach(function (n) {
+        grid.appendChild(h('button', { type: 'button', 'aria-label': n, title: n, 'aria-pressed': own === n ? 'true' : 'false', onclick: function () { save(n); },
+          style: { aspectRatio: '1', minHeight: '38px', borderRadius: '14px', border: own === n ? '2px solid #fff' : '0', background: own === n ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }, html: UI.icon(n, 26) }));
+      });
+      var box = h('div', null, grid);
+      if (UI.haIconAvailable()) {
+        var input = h('input.rm-q', { type: 'text', value: UI.isMdi(own) ? own : '', placeholder: t('dt.icon_mdi'), 'aria-label': t('dt.icon_mdi_hint'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
+        var ok = h('button.rm-mk', { type: 'button', onclick: function () { var v = input.value.trim().toLowerCase(); if (v && v.indexOf(':') < 0) v = 'mdi:' + v; if (!UI.isMdi(v)) { input.focus(); return; } save(v); } }, t('dt.rename_save'));
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); ok.click(); } });
+        box.appendChild(h('div', { style: { fontSize: '13px', opacity: '.75', margin: '0 0 6px 4px' } }, t('dt.icon_mdi_hint')));
+        box.appendChild(h('div.rm-newrow', null, input, ok));
+      }
+      if (own) box.appendChild(h('button.rm-pr', { type: 'button', onclick: function () { save(''); } }, h('span.pt', null, h('b', null, t('dt.icon_orig')))));
+      sheet = ctx.sheet({ title: t('dt.icon'), content: function () { return box; } });
+    }
     var ebar = h('div.dt-ebar', null,
       h('button.dt-eb', { type: 'button', onclick: openRename, html: UI.icon('pencil', 16) + '<span>' + t('dt.rename') + '</span>' }),
+      h('button.dt-eb', { type: 'button', onclick: openIcon, html: UI.icon('star', 16) + '<span>' + t('dt.icon') + '</span>' }),
       h('button.dt-eb', { type: 'button', onclick: function () { heroPct = 0; applyHero(0); ctx.settings.set({ detailHero: 0 }); setTimeout(placeGrip, 30); } }, t('dt.hero_reset')),
       h('button.dt-eb.pri', { type: 'button', onclick: function () { setEdit(false); } }, t('dt.done')));
     grip.addEventListener('pointerdown', function (e) { e.preventDefault(); dragHero = true; try { grip.setPointerCapture(e.pointerId); } catch (er) { /* the move still arrives */ } });
@@ -505,7 +528,7 @@
     function update() {
       var s = ctx.state(id); if (!s) return;
       sub.textContent = [item.area, L.describeState(item.domain, s, ctx.lang())].filter(Boolean).join(' · ');
-      iconBg.innerHTML = UI.icon(UI.domainIcon(item.domain, s.attributes.device_class || item.deviceClass, s.state), 170);
+      iconBg.innerHTML = UI.deviceIcon(id, UI.domainIcon(item.domain, s.attributes.device_class || item.deviceClass, s.state), 170);
       if (wx) wx.update();
       if (control) control.update(s);
       else if (active && active.update && tab !== 'controls') active.update();

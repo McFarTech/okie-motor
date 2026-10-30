@@ -149,10 +149,23 @@
   // the two that move
   var LOOPS = { fan: 1, vacuum: 1 };
 
+  // the colour an "on" tile gives its icon, per family (the same as the drawings above)
+  var ACCENT = { toggle: '#3b9bff', outlet: '#3b9bff', light: '#f5a30b', tv: '#2d8cf0', speaker: '#8e5be8', snow: '#22d3ee', flame: '#f0731b', bolt: '#f5a30b', sun: '#f5a30b', shield: '#e0492f' };
+  function accentOf(k) { return ACCENT[k] || '#2d8cf0'; }
+
   /** Coloured icon markup for a tile. on = the tile is white. */
   function deviceSvg(item, state, on, size, attrs) {
     var dc = (attrs && attrs.device_class) || item.deviceClass;
     var k = kind(item.domain, dc, state, attrs);
+    var ov = UI && UI.iconOverride ? UI.iconOverride(item.id) : '';      // the icon you chose for this device (device screen > pencil > Icon, or Home Assistant's own)
+    if (ov) {
+      if (DRAW[ov]) k = ov;                                               // one of the coloured drawings: drawn like any other
+      else {
+        var s = size || 48, inner = Math.round(s * 0.62), col0 = on ? accentOf(k) : OFF;
+        var mk = UI.isMdi(ov) ? UI.mdiIcon(ov, inner, col0) : (UI.ICONS[ov] ? UI.icon(ov, inner) : '');
+        if (mk) return '<span class="oi rich own k-' + k + '" style="display:inline-flex;align-items:center;justify-content:center;width:' + s + 'px;height:' + s + 'px;color:' + col0 + ';">' + mk + '</span>';
+      }
+    }
     var col = on ? 'rgba(0,0,0,.72)' : OFF;
     var body = (DRAW[k] || DRAW.dot)(on, col);
     return sv(size || 48, body, 'k-' + k);

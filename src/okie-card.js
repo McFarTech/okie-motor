@@ -32,7 +32,7 @@
     topCategory: 'devices', chip: 'all', layout: 'grid',
     squircle: 'none',
     quickEnabled: true, quickControl: L.DEFAULT_QUICK,
-    favorites: [], detailHero: 0, deviceNames: {}, rooms: [], roomOrder: {}, roomsOrder: [], roomEdits: {}, cardStyle: {}, roomsExtra: [], roomsHidden: [], roomNames: {}, learning: 'normal',
+    favorites: [], detailHero: 0, deviceNames: {}, deviceIcons: {}, haIcons: true, rooms: [], roomOrder: {}, roomsOrder: [], roomEdits: {}, cardStyle: {}, roomsExtra: [], roomsHidden: [], roomNames: {}, learning: 'normal',
     visibility: { hidden: false, disabled: false, diagnostic: false },
     excluded: ['switch.schedule_*'],     // the Scheduler component's helper switches belong to the Schedules app, not the device list
     limits: { max: 0, areaOnly: true, hideUnavailable: true },
@@ -194,6 +194,8 @@
       var defaults = Object.assign({}, DEFAULTS, g.OkieMotor.defaults || {});
       this._store = core.createStore({ prefix: 'okie:' });
       this._settings = core.createSettings({ store: this._store, defaults: defaults, config: this._config });
+      // your own device icons: the one chosen on the device screen wins, else the icon set for the entity in Home Assistant (when haIcons is on)
+      UI.setIconSource((id) => { var s = this._settings.get(), hs = this._hass, e = hs && hs.entities && hs.entities[id]; return UI.pickIcon((s.deviceIcons || {})[id], e && e.icon, s.haIcons !== false); });
       if (g.OkieMotor.controls && g.OkieMotor.controls.setLookSource) g.OkieMotor.controls.setLookSource(() => this._settings.get().thermo);      // the dial look is one rule for every dial and slider
       this._engine = S.createEngine({ store: this._store, lang: this._lang(), speed: this._settings.get().learning });
       this._importFsc();
@@ -652,6 +654,7 @@
       if (p && p.search && this._search) this._search.applySettings();
       if (p && (p.quickControl || p.quickEnabled !== undefined || p.layout || p.search)) { if (this._search) this._search.rerun(); }
       if (p && p.sidebar) this._renderDock();
+      if (p && (p.deviceIcons !== undefined || p.haIcons !== undefined)) { this._rebuildStart(); if (this._search) this._search.rerun(); }      // a new icon for a device: the tiles draw it at once
       if (p && p.zen) { var on = !!(this._settings.get().zen || {}).enabled; if (!on && this._zenView) { this._setLocked(false); this._zenView.dispose(); this._zenView.el.remove(); this._zenView = null; } }
       this._updateIsland(true);
     }

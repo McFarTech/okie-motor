@@ -33,3 +33,34 @@ test('pull to open: progress along the pill and where letting go opens it', () =
   assert.equal(UI.pullOpens(0.55), true);
   assert.equal(UI.pullOpens(1), true);
 });
+
+test('your own device icon: the one chosen on the device screen wins, then Home Assistant\'s, else none', () => {
+  assert.equal(UI.pickIcon('speaker', 'mdi:sofa', true), 'speaker', 'chosen on the device screen');
+  assert.equal(UI.pickIcon('mdi:television-classic', '', true), 'mdi:television-classic', 'a Home Assistant icon chosen on the device screen');
+  assert.equal(UI.pickIcon('', 'mdi:sofa', true), 'mdi:sofa', 'the icon set in Home Assistant');
+  assert.equal(UI.pickIcon('', 'mdi:sofa', false), '', 'Home Assistant icons switched off');
+  assert.equal(UI.pickIcon(undefined, undefined, true), '', 'nothing chosen anywhere');
+  assert.equal(UI.pickIcon('', 'not an icon', true), '', 'a broken registry value is ignored');
+  assert.equal(UI.pickIcon('<img onerror=x>', '', true), '', 'markup is never accepted as a name');
+  assert.equal(UI.pickIcon('  ', 'hass:lightbulb', true), 'hass:lightbulb', 'blank own value falls through');
+});
+
+test('mdi names are recognised and nothing else is', () => {
+  assert.equal(UI.isMdi('mdi:sofa'), true);
+  assert.equal(UI.isMdi('mdi:sofa-single-outline'), true);
+  assert.equal(UI.isMdi('sofa'), false);
+  assert.equal(UI.isMdi('mdi:"x'), false);
+  assert.equal(UI.isMdi(null), false);
+});
+
+test('without a chosen icon a device keeps its usual one', () => {
+  UI.setIconSource(null);
+  assert.equal(UI.iconOverride('media_player.tv'), '');
+  UI.setIconSource(id => (id === 'media_player.tv' ? 'speaker' : ''));
+  assert.equal(UI.iconOverride('media_player.tv'), 'speaker');
+  assert.ok(UI.deviceIcon('media_player.tv', 'tv', 24).indexOf(UI.ICONS.speaker) >= 0, 'the chosen card icon is drawn');
+  assert.ok(UI.deviceIcon('light.desk', 'bulb', 24).indexOf(UI.ICONS.bulb) >= 0, 'others keep theirs');
+  UI.setIconSource(() => { throw new Error('boom'); });
+  assert.equal(UI.iconOverride('x.y'), '', 'a failing source never breaks a tile');
+  UI.setIconSource(null);
+});

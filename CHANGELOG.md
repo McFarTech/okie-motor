@@ -2,6 +2,12 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.301 (2026-10-30)
+
+**Choose the icon of any device.**
+- On a device screen tap the pencil, then Icon: pick one of the card's own icons, or type any Home Assistant icon (mdi:sofa). The tiles, the rooms and the device screen show it, on every screen of yours
+- Devices you gave an icon in Home Assistant show that icon (Settings > Appearance > Home Assistant icons). Original icon puts the drawing back
+
 ## 0.55.3 (2026-10-27)
 
 **A card with one page has no pager.**

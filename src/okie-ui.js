@@ -206,6 +206,41 @@
     }
   }
 
+  // ------------------------------------------------- your own icons ----
+  // A device can carry an icon you chose: one of the card's own (a name of ICONS, or of the coloured
+  // drawings of okie-icons) or a Material Design icon ("mdi:sofa") drawn by Home Assistant's <ha-icon>.
+  var MDI_RE = /^[a-z0-9]+:[a-z0-9-]+$/;
+  function isMdi(name) { return typeof name === 'string' && MDI_RE.test(name) && name.indexOf(':') > 0; }
+  /** Which icon you chose for an entity, '' for none. Pure, tested.
+   *  own: the icon set on the device screen (settings.deviceIcons[id]) — wins;
+   *  haIcon: the icon set for the entity in Home Assistant (entity registry), used when useHa is on. */
+  function pickIcon(own, haIcon, useHa) {
+    var o = typeof own === 'string' ? own.trim() : '';
+    if (o && (isMdi(o) || /^[a-z][a-z0-9_-]*$/.test(o))) return o;
+    var a = typeof haIcon === 'string' ? haIcon.trim() : '';
+    if (useHa && isMdi(a)) return a;
+    return '';
+  }
+  var iconSource = null;      // set by the card: id -> chosen icon ('' for none)
+  function setIconSource(fn) { iconSource = typeof fn === 'function' ? fn : null; }
+  function iconOverride(id) { if (!iconSource || !id) return ''; try { return iconSource(id) || ''; } catch (e) { return ''; } }
+  function haIconAvailable() { return typeof customElements !== 'undefined' && !!customElements.get('ha-icon'); }
+  /** Home Assistant's own icon element, '' where it does not exist (the harness, the offline demo). */
+  function mdiIcon(name, size, color) {
+    if (!isMdi(name) || !haIconAvailable()) return '';
+    var s = size || 24;
+    return '<ha-icon class="oi mdi" icon="' + name + '" style="--mdc-icon-size:' + s + 'px;width:' + s + 'px;height:' + s + 'px;display:inline-flex;' + (color ? 'color:' + color + ';' : '') + '" aria-hidden="true"></ha-icon>';
+  }
+  /** The line icon of a device: your own if you chose one, else the usual one (fallback, a name of ICONS). */
+  function deviceIcon(id, fallback, size, extra) {
+    var ov = iconOverride(id);
+    if (ov) {
+      if (isMdi(ov)) { var m = mdiIcon(ov, size); if (m) return m; }
+      else if (ICONS[ov]) return icon(ov, size, extra);
+    }
+    return icon(fallback, size, extra);
+  }
+
   // ------------------------------------------------------- base CSS ----
   // One stylesheet string every okie element prepends to its shadow root.
   var BASE_CSS = [
@@ -470,6 +505,7 @@
     tick: tick, h: h, icon: icon, iconEl: iconEl, ICONS: ICONS, domainIcon: domainIcon, BASE_CSS: BASE_CSS,
     attachScrollbar: attachScrollbar, onTapOrHold: onTapOrHold, debounce: debounce, rafBatch: rafBatch, guard: guard,
     screenRect: screenRect, reportsUnzoomed: reportsUnzoomed,
+    isMdi: isMdi, pickIcon: pickIcon, setIconSource: setIconSource, iconOverride: iconOverride, mdiIcon: mdiIcon, deviceIcon: deviceIcon, haIconAvailable: haIconAvailable,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { g.OkieMotor = g.OkieMotor || {}; g.OkieMotor.ui = api; }
