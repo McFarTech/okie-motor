@@ -2,6 +2,11 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.305 (2026-10-30)
+
+**The Music cover tries every way to load.**
+- Each picture of the player is tried by this page's own address and by Home Assistant's address, so a cover no longer goes missing when the two differ (http and https, inside and outside your home). The colour of the screen follows the cover that loaded
+
 ## 0.55.304 (2026-10-30)
 
 **The Music screen shows your icon, and its cover no longer breaks.**

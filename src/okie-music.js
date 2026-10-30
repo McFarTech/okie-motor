@@ -233,11 +233,18 @@
     var art = h('div.mu-art'), artImg = h('img', { alt: '', decoding: 'async', draggable: false }), title = h('div.mu-t'), artist = h('div.mu-a'), moreBtn = h('button.mu-more', { type: 'button', 'aria-label': t('mu.more'), onclick: openMore, html: UI.icon('more', 20) });
     art.appendChild(artImg); art.appendChild(h('div.mu-frost'));
     // a cover that does not load (an outside address the browser blocks, an expired link): try the other picture of the player, then show none
-    artImg.addEventListener('error', function () {
-      var alt = np && np.art2 ? mediaUrl(np.art2) : '';
-      if (alt && artImg.getAttribute('src') !== alt) { artImg.setAttribute('src', alt); return; }
-      artImg.removeAttribute('src'); art.classList.add('noimg');
-    });
+    var artTries = [], artAt = 0, artKey = '';
+    function artCandidates() {      // every way to load the cover: each picture by its own path (this page's address) and by Home Assistant's address
+      var out = [], hs = ctx.hass(), add = function (u) { if (u && out.indexOf(u) < 0) out.push(u); };
+      [np && np.art, np && np.art2].forEach(function (u) { if (!u) return; add(u); if (/^\//.test(u) && hs && hs.hassUrl) { try { add(hs.hassUrl(u)); } catch (e) { /* no address */ } } });
+      return out;
+    }
+    function showArt() {      // the next way to load it, or none
+      if (artAt < artTries.length) { art.classList.remove('noimg'); artImg.setAttribute('src', artTries[artAt]); }
+      else { artImg.removeAttribute('src'); art.classList.add('noimg'); }
+    }
+    artImg.addEventListener('error', function () { artAt++; showArt(); });
+    artImg.addEventListener('load', function () { var u = artImg.getAttribute('src'); if (u) paintTint(u); });      // the colour of the screen follows the cover that did load
     art.appendChild(h('button.mu-cta', { type: 'button', onclick: openLib, html: UI.icon('grid', 20) + '<span>' + t('mu.browse') + '</span>' }));      // an empty player offers your Spotify instead of a blank picture
     var ti = h('div.mu-ti', null, h('div.mu-txt', null, title, artist), moreBtn);
     var lyBox = h('div.mu-ly', { hidden: true }), lyHead = h('div.mu-lh'), lyList = h('div.mu-ll');
@@ -590,8 +597,9 @@
       if (force || key !== lastPaintKey) {
         lastPaintKey = key;
         title.textContent = np.title || t('mu.nothing'); artist.textContent = np.title ? np.artist : t('mu.nothing_sub');
-        if (artImg.getAttribute('src') !== url) { if (url) artImg.setAttribute('src', url); else artImg.removeAttribute('src'); }
-        art.classList.toggle('noimg', !url); paintTint(url); sizeStage();
+        var cands = artCandidates(), ck = cands.join('|');
+        if (ck !== artKey) { artKey = ck; artTries = cands; artAt = 0; showArt(); }
+        paintTint(url); sizeStage();
         playBtn.innerHTML = UI.icon(np.playing ? 'pausefill' : 'playfill', 46); playBtn.setAttribute('aria-label', np.playing ? t('mu.pause') : t('mu.play'));
         prevBtn.disabled = !np.can.prev; nextBtn.disabled = !np.can.next; volBtn.disabled = !np.can.volume; volBtn.setAttribute('aria-label', t('mu.volume') + (np.volume != null ? ' ' + Math.round(np.volume * 100) + '%' : ''));
         devBtn.hidden = !(np.sources.length || true);
