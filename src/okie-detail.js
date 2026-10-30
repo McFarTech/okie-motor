@@ -18,7 +18,7 @@
   core.registerStrings('en', {
     'dt.controls': 'Controls', 'dt.context': 'Context', 'dt.history': 'History', 'dt.schedule': 'Schedule', 'dt.settings': 'Settings',
     'dt.related': 'Related', 'dt.same_area': 'In this room', 'dt.nothing_related': 'No scene, script or automation uses this device yet.', 'dt.nothing_related_hint': 'This tab lists the ones that do, and the scenes and scripts of its room, each with a Run button. Add one in Home Assistant that uses this device and it shows up here.', 'dt.run': 'Run', 'dt.running': 'Started',
-    'dt.edit': 'Edit this screen', 'dt.rename': 'Rename', 'dt.rename_orig': 'Original name', 'dt.rename_save': 'Save', 'dt.hero_hint': 'Drag to resize the picture', 'dt.hero_reset': 'Reset size', 'dt.done': 'Done', 'dt.icon': 'Icon', 'dt.icon_orig': 'Original icon', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Or any Home Assistant icon, like mdi:sofa',
+    'dt.edit': 'Edit this screen', 'dt.rename': 'Rename', 'dt.rename_orig': 'Original name', 'dt.rename_save': 'Save', 'dt.hero_hint': 'Drag to resize the picture', 'dt.hero_reset': 'Reset size', 'dt.done': 'Done', 'dt.icon': 'Icon', 'dt.icon_orig': 'Original icon', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Or any Home Assistant icon, like mdi:sofa', 'dt.icon_animara': 'Animara (animated)', 'dt.icon_animara_auto': 'Let Animara choose', 'dt.icon_animara_find': 'Find an Animara icon', 'dt.icon_more': '{n} more: type to find them',
     'dt.24h': '24 hours', 'dt.7d': '7 days', 'dt.30d': '30 days', 'dt.changes': 'Changes', 'dt.avg_run': 'Avg. on-time', 'dt.active': 'Active', 'dt.min': 'Min', 'dt.max': 'Max', 'dt.avg': 'Avg',
     'dt.by_hour': 'Time of day', 'dt.durations': 'Time in each state', 'dt.loading': 'Loading history…', 'dt.no_history': 'No history for this period.', 'dt.history_failed': 'Could not load history.',
     'dt.sched_none': 'No schedules for this device yet.', 'dt.sched_add': 'New schedule', 'dt.sched_time': 'Time', 'dt.sched_days': 'Days', 'dt.sched_action': 'Action', 'dt.sched_save': 'Save schedule',
@@ -32,7 +32,7 @@
   core.registerStrings('de', {
     'dt.controls': 'Steuerung', 'dt.context': 'Kontext', 'dt.history': 'Verlauf', 'dt.schedule': 'Zeitplan', 'dt.settings': 'Einstellungen',
     'dt.related': 'Zugehörig', 'dt.same_area': 'In diesem Raum', 'dt.nothing_related': 'Noch keine Szene, kein Skript und keine Automation nutzt dieses Gerät.', 'dt.nothing_related_hint': 'Dieser Tab zeigt die, die es nutzen, und die Szenen und Skripte seines Raums, jeweils mit einem Ausführen-Knopf. Lege in Home Assistant eine an, die dieses Gerät nutzt, und sie erscheint hier.', 'dt.run': 'Ausführen', 'dt.running': 'Gestartet',
-    'dt.edit': 'Diesen Bildschirm bearbeiten', 'dt.rename': 'Umbenennen', 'dt.rename_orig': 'Originalname', 'dt.rename_save': 'Speichern', 'dt.hero_hint': 'Ziehen, um das Bild zu verändern', 'dt.hero_reset': 'Größe zurücksetzen', 'dt.done': 'Fertig', 'dt.icon': 'Symbol', 'dt.icon_orig': 'Ursprüngliches Symbol', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Oder ein beliebiges Home-Assistant-Symbol, z. B. mdi:sofa',
+    'dt.edit': 'Diesen Bildschirm bearbeiten', 'dt.rename': 'Umbenennen', 'dt.rename_orig': 'Originalname', 'dt.rename_save': 'Speichern', 'dt.hero_hint': 'Ziehen, um das Bild zu verändern', 'dt.hero_reset': 'Größe zurücksetzen', 'dt.done': 'Fertig', 'dt.icon': 'Symbol', 'dt.icon_orig': 'Ursprüngliches Symbol', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Oder ein beliebiges Home-Assistant-Symbol, z. B. mdi:sofa', 'dt.icon_animara': 'Animara (animiert)', 'dt.icon_animara_auto': 'Animara wählen lassen', 'dt.icon_animara_find': 'Animara-Symbol suchen', 'dt.icon_more': '{n} weitere: tippe, um sie zu finden',
     'dt.24h': '24 Stunden', 'dt.7d': '7 Tage', 'dt.30d': '30 Tage', 'dt.changes': 'Wechsel', 'dt.avg_run': 'Ø Einschaltdauer', 'dt.active': 'Aktiv', 'dt.min': 'Min', 'dt.max': 'Max', 'dt.avg': 'Ø',
     'dt.by_hour': 'Tageszeit', 'dt.durations': 'Zeit je Zustand', 'dt.loading': 'Verlauf wird geladen…', 'dt.no_history': 'Kein Verlauf in diesem Zeitraum.', 'dt.history_failed': 'Verlauf konnte nicht geladen werden.',
     'dt.sched_none': 'Noch keine Zeitpläne für dieses Gerät.', 'dt.sched_add': 'Neuer Zeitplan', 'dt.sched_time': 'Uhrzeit', 'dt.sched_days': 'Tage', 'dt.sched_action': 'Aktion', 'dt.sched_save': 'Zeitplan speichern',
@@ -190,7 +190,8 @@
     function entry(id) {
       var it = ctx.engine.getItem(id); if (!it) return null;
       var svcName = it.domain === 'automation' ? 'trigger' : 'turn_on';
-      return h('div.ctxrow', null, h('span', { html: UI.deviceIcon(it.id, UI.domainIcon(it.domain), 22) }), h('span.ctxname', null, it.name),
+      var icn = h('span'); UI.setIcon(icn, UI.deviceIcon(it.id, UI.domainIcon(it.domain), 22));
+      return h('div.ctxrow', null, icn, h('span.ctxname', null, it.name),
         h('button.act', { onclick: function () { ctx.call(it.domain, svcName, { entity_id: id }).then(function () { ctx.toast('success', t('dt.running') + ': ' + it.name); ctx.engine.recordUse(id); }, function () { ctx.toast('error', it.name); }); } }, h('span', { html: UI.icon('play', 16) }), h('span', null, t('dt.run'))));
     }
     function draw() {
@@ -400,7 +401,7 @@
     hero.appendChild(h('div.dt-top', null, back, h('div.dt-head', null, title, sub), h('div.dt-acts', null, pen, heart)));      // the pencil next to the heart: the size of the picture and the name
     var wx = null;      // the weather screen has two pages: the first fills the hero, the second is the Controls tab (okie-weather)
     if (item.domain === 'weather' && g.OkieMotor.weather && g.OkieMotor.weather.create) { try { wx = g.OkieMotor.weather.create(ctx, item); hero.insertBefore(wx.sky, hero.firstChild); hero.appendChild(wx.hero); } catch (e) { wx = null; } }
-    iconBg.innerHTML = UI.deviceIcon(id, UI.domainIcon(item.domain, item.deviceClass, st.state), 170);
+    UI.setIcon(iconBg, UI.deviceIcon(id, UI.domainIcon(item.domain, item.deviceClass, st.state), 170));
 
     var bar = h('div.dt-bar', { role: 'tablist' });
     // on a phone the five tabs sit behind a round bubble (it shows the open tab); a tap opens it into the row, a choice or a tap elsewhere closes it
@@ -433,7 +434,7 @@
     }
     // ---- the pencil > Icon: one of the card's own icons, or any Home Assistant icon (mdi:...), kept for your user like the names
     var ICON_CHOICES = ['bulb', 'plug', 'toggle', 'power', 'tv', 'speaker', 'music', 'film', 'cast', 'tablet', 'camera', 'doorbell', 'bell', 'lock', 'key', 'door', 'window', 'garage', 'blinds', 'thermostat', 'snowflake', 'flame', 'fan', 'drop', 'wind', 'vacuum', 'bolt', 'battery', 'sun', 'moon', 'home', 'homeroom', 'heart', 'star', 'shield', 'person', 'motion', 'eye', 'gauge', 'clock', 'book', 'spark'].filter(function (n) { return !!UI.ICONS[n]; });
-    function redrawIcon() { var s = ctx.state(id) || st; iconBg.innerHTML = UI.deviceIcon(id, UI.domainIcon(item.domain, (s.attributes || {}).device_class || item.deviceClass, s.state), 170); }
+    function redrawIcon() { var s = ctx.state(id) || st; UI.setIcon(iconBg, UI.deviceIcon(id, UI.domainIcon(item.domain, (s.attributes || {}).device_class || item.deviceClass, s.state), 170)); }
     function openIcon() {
       var own = (ctx.settings.get().deviceIcons || {})[id] || '', sheet = null;
       function save(name) { var o = {}; o[id] = name; ctx.settings.set({ deviceIcons: o }); redrawIcon(); if (ctx.haptic) ctx.haptic(8); if (sheet) sheet.close('saved'); }
@@ -442,7 +443,30 @@
         grid.appendChild(h('button', { type: 'button', 'aria-label': n, title: n, 'aria-pressed': own === n ? 'true' : 'false', onclick: function () { save(n); },
           style: { aspectRatio: '1', minHeight: '38px', borderRadius: '14px', border: own === n ? '2px solid #fff' : '0', background: own === n ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }, html: UI.icon(n, 26) }));
       });
-      var box = h('div', null, grid);
+      var box = h('div', null);
+      if (UI.animaraAvailable()) {      // Animara's animated icons, shown live in this device's own state
+        var list = UI.animaraIcons(), aq = h('input.rm-q', { type: 'search', placeholder: t('dt.icon_animara_find'), 'aria-label': t('dt.icon_animara_find'), autocomplete: 'off', spellcheck: 'false' });
+        var agrid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4,minmax(64px,1fr))', gap: '8px', width: '352px', maxWidth: '100%', marginBottom: '6px' } }), amore = h('div', { style: { fontSize: '12px', opacity: '.65', margin: '0 0 12px 4px' } });
+        var aBtn = function (key, label) {
+          var val = 'animara:' + key, sel = own === val, pic = h('span', { style: { width: '52px', height: '52px', display: 'block' } });
+          var b = h('button', { type: 'button', 'aria-pressed': sel ? 'true' : 'false', title: label, onclick: function () { save(val); },
+            style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '8px 4px', borderRadius: '14px', border: sel ? '2px solid #fff' : '0', background: sel ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', cursor: 'pointer', font: 'inherit', fontSize: '11px', lineHeight: '1.2', textAlign: 'center' } }, pic, h('span', null, label));
+          UI.setIcon(pic, UI.animaraSlot(id, key, 52));
+          return b;
+        };
+        var drawA = function () {
+          var q = aq.value.trim().toLowerCase(), hits = list.filter(function (x) { return !q || (x.name + ' ' + x.category + ' ' + x.key).toLowerCase().indexOf(q) >= 0; });
+          agrid.innerHTML = '';
+          if (!q) agrid.appendChild(aBtn('auto', t('dt.icon_animara_auto')));
+          hits.slice(0, q ? 24 : 11).forEach(function (x) { agrid.appendChild(aBtn(x.key, x.name)); });
+          var rest = hits.length - (q ? 24 : 11); amore.textContent = rest > 0 ? t('dt.icon_more', { n: rest }) : '';
+        };
+        var at = 0; aq.addEventListener('input', function () { clearTimeout(at); at = setTimeout(drawA, 150); });
+        box.appendChild(h('div', { style: { fontSize: '13px', fontWeight: '700', margin: '0 0 8px 4px' } }, t('dt.icon_animara')));
+        if (list.length > 11) box.appendChild(aq);
+        box.appendChild(agrid); box.appendChild(amore); drawA();
+      }
+      box.appendChild(grid);
       if (UI.haIconAvailable()) {
         var input = h('input.rm-q', { type: 'text', value: UI.isMdi(own) ? own : '', placeholder: t('dt.icon_mdi'), 'aria-label': t('dt.icon_mdi_hint'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
         var ok = h('button.rm-mk', { type: 'button', onclick: function () { var v = input.value.trim().toLowerCase(); if (v && v.indexOf(':') < 0) v = 'mdi:' + v; if (!UI.isMdi(v)) { input.focus(); return; } save(v); } }, t('dt.rename_save'));
@@ -528,7 +552,7 @@
     function update() {
       var s = ctx.state(id); if (!s) return;
       sub.textContent = [item.area, L.describeState(item.domain, s, ctx.lang())].filter(Boolean).join(' · ');
-      iconBg.innerHTML = UI.deviceIcon(id, UI.domainIcon(item.domain, s.attributes.device_class || item.deviceClass, s.state), 170);
+      UI.setIcon(iconBg, UI.deviceIcon(id, UI.domainIcon(item.domain, s.attributes.device_class || item.deviceClass, s.state), 170));
       if (wx) wx.update();
       if (control) control.update(s);
       else if (active && active.update && tab !== 'controls') active.update();
@@ -557,6 +581,7 @@
     '.dt-ebar{display:none;position:absolute;left:16px;bottom:16px;z-index:7;gap:8px;}.dt[data-edit="1"] .dt-ebar{display:flex;}.dt-eb{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 16px;border-radius:9999px;background:rgba(20,22,26,.62);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;font-size:14px;font-weight:600;}.dt-eb.pri{background:#fff;color:#14161a;}',
     '@media (max-width:640px){.dt-grip{display:none!important;}}',
     '.dt-iconbg{position:absolute;inset:0;display:grid;place-items:center;opacity:.22;}',
+    '.dt-iconbg:has(.okie-anim){opacity:1;}.dt-iconbg .okie-anim{width:min(260px,70%)!important;height:min(260px,70%)!important;}',      // an Animara picture is shown, not a faint watermark
     '.dt[data-domain="vacuum"] .dt-iconbg{display:none;}',                                    // the robot of the vacuum screen is the picture
     '.dt-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s ease;}',
     '.dt-video.on{opacity:1;}',

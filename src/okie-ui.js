@@ -214,11 +214,13 @@
   /** Which icon you chose for an entity, '' for none. Pure, tested.
    *  own: the icon set on the device screen (settings.deviceIcons[id]) — wins;
    *  haIcon: the icon set for the entity in Home Assistant (entity registry), used when useHa is on. */
+  var ANIM_RE = /^animara:[a-z0-9_]+$/;
+  function isAnimara(name) { return typeof name === 'string' && ANIM_RE.test(name); }
   function pickIcon(own, haIcon, useHa) {
     var o = typeof own === 'string' ? own.trim() : '';
-    if (o && (isMdi(o) || /^[a-z][a-z0-9_-]*$/.test(o))) return o;
+    if (o && (isMdi(o) || isAnimara(o) || /^[a-z][a-z0-9_-]*$/.test(o))) return o;
     var a = typeof haIcon === 'string' ? haIcon.trim() : '';
-    if (useHa && isMdi(a)) return a;
+    if (useHa && isMdi(a) && !isAnimara(a)) return a;
     return '';
   }
   var iconSource = null;      // set by the card: id -> chosen icon ('' for none)
@@ -231,11 +233,51 @@
     var s = size || 24;
     return '<ha-icon class="oi mdi" icon="' + name + '" style="--mdc-icon-size:' + s + 'px;width:' + s + 'px;height:' + s + 'px;display:inline-flex;' + (color ? 'color:' + color + ';' : '') + '" aria-hidden="true"></ha-icon>';
   }
+  // Animara (animara.io): animated device icons that only its own <animara-card> can draw. Its "icon" layout with
+  // bare: true is the icon alone (no card, no text, no taps), made to sit inside other cards. "animara:auto" lets
+  // Animara choose the icon from the entity, "animara:bulb" picks one.
+  var hassSource = null, animaraKey = '';
+  function setHassSource(fn) { hassSource = typeof fn === 'function' ? fn : null; }
+  function setAnimaraKey(k) { animaraKey = typeof k === 'string' ? k.trim() : ''; }
+  function animaraAvailable() { return typeof customElements !== 'undefined' && !!customElements.get('animara-card'); }
+  /** The icons Animara offers here: [{ key, name, category }] (12 in the free sampler, all of the pack when installed). */
+  function animaraIcons() {
+    var E = typeof window !== 'undefined' && window.AnimaraEngine, out = [];
+    if (!E || !E.icons) return out;
+    Object.keys(E.icons).forEach(function (k) { var v = E.icons[k] || {}; out.push({ key: k, name: v.name || k, category: v.category || '' }); });
+    return out.sort(function (a, b) { return (a.category + a.name).localeCompare(b.category + b.name); });
+  }
+  function animaraSlot(id, kind, size) {
+    var s = size || 48;
+    return '<span class="oi okie-anim" data-entity="' + String(id).replace(/[^a-z0-9_.]/gi, '') + '" data-kind="' + kind + '" style="display:inline-flex;width:' + s + 'px;height:' + s + 'px;" aria-hidden="true"></span>';
+  }
+  /** Puts icon markup into a host and brings any Animara slot in it to life; the same markup again only refreshes the state. */
+  function setIcon(host, html) {
+    if (!host) return;
+    if (host._okieIcon !== html) { host.innerHTML = html; host._okieIcon = html; }
+    var hs = hassSource ? hassSource() : null;
+    Array.prototype.forEach.call(host.querySelectorAll('span.okie-anim'), function (slot) {
+      var card = slot._card;
+      if (!card) {
+        if (!animaraAvailable()) return;
+        card = document.createElement('animara-card');
+        var kind = slot.dataset.kind, cfg = { entity: slot.dataset.entity, layout: 'icon', bare: true, tap_action: { action: 'none' } };
+        if (kind && kind !== 'auto') cfg.icon = kind;
+        if (animaraKey) cfg.license_key = animaraKey;
+        try { card.setConfig(cfg); } catch (e) { return; }      // an icon this Animara does not have: the slot stays empty
+        card.style.cssText = 'display:block;width:100%;height:100%;pointer-events:none;';
+        slot.appendChild(card); slot._card = card;
+      }
+      if (hs) card.hass = hs;
+    });
+  }
+
   /** The line icon of a device: your own if you chose one, else the usual one (fallback, a name of ICONS). */
   function deviceIcon(id, fallback, size, extra) {
     var ov = iconOverride(id);
     if (ov) {
-      if (isMdi(ov)) { var m = mdiIcon(ov, size); if (m) return m; }
+      if (isAnimara(ov)) { if (animaraAvailable()) return animaraSlot(id, ov.slice(8), size); }
+      else if (isMdi(ov)) { var m = mdiIcon(ov, size); if (m) return m; }
       else if (ICONS[ov]) return icon(ov, size, extra);
     }
     return icon(fallback, size, extra);
@@ -506,6 +548,7 @@
     attachScrollbar: attachScrollbar, onTapOrHold: onTapOrHold, debounce: debounce, rafBatch: rafBatch, guard: guard,
     screenRect: screenRect, reportsUnzoomed: reportsUnzoomed,
     isMdi: isMdi, pickIcon: pickIcon, setIconSource: setIconSource, iconOverride: iconOverride, mdiIcon: mdiIcon, deviceIcon: deviceIcon, haIconAvailable: haIconAvailable,
+    isAnimara: isAnimara, animaraAvailable: animaraAvailable, animaraIcons: animaraIcons, animaraSlot: animaraSlot, setIcon: setIcon, setHassSource: setHassSource, setAnimaraKey: setAnimaraKey,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { g.OkieMotor = g.OkieMotor || {}; g.OkieMotor.ui = api; }

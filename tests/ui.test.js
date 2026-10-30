@@ -64,3 +64,13 @@ test('without a chosen icon a device keeps its usual one', () => {
   assert.equal(UI.iconOverride('x.y'), '', 'a failing source never breaks a tile');
   UI.setIconSource(null);
 });
+
+test('Animara icons can be chosen, with their own prefix', () => {
+  assert.equal(UI.isAnimara('animara:smart_plug'), true);
+  assert.equal(UI.isAnimara('animara:auto'), true);
+  assert.equal(UI.isAnimara('animara:<x>'), false);
+  assert.equal(UI.isAnimara('mdi:sofa'), false);
+  assert.equal(UI.pickIcon('animara:ceiling_fan', 'mdi:fan', true), 'animara:ceiling_fan', 'chosen on the device screen');
+  assert.equal(UI.pickIcon('', 'animara:bulb', true), '', 'a registry icon is never an Animara one (Home Assistant cannot draw it)');
+  assert.deepEqual(UI.animaraIcons(), [], 'nothing offered when Animara is not installed');
+});

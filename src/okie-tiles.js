@@ -64,7 +64,7 @@
       el.classList.toggle('active', on);
       el.classList.toggle('unavail', s.state === 'unavailable');
       el.dataset.d = item.domain;
-      el._ic.iconHost.innerHTML = IC.deviceSvg(item, s.state, on, 64, s.attributes);
+      UI.setIcon(el._ic.iconHost, IC.deviceSvg(item, s.state, on, 64, s.attributes));      // setIcon: an Animara icon stays alive and only gets the new state
       el._ic.wire();
       el._state.textContent = L.tileState(item, s, ctx.lang());
       if (el._sw) { el._sw.classList.toggle('on', s.state === 'on'); el._sw.setAttribute('aria-checked', s.state === 'on' ? 'true' : 'false'); el._sw.disabled = s.state === 'unavailable'; }

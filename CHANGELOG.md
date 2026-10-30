@@ -2,6 +2,12 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.302 (2026-10-30)
+
+**Animara icons for your devices.**
+- With Animara installed, the Icon picker (device screen > pencil > Icon) shows its animated icons live, in the state of that device: pick one, or let Animara choose. The tiles, the rooms and the device screen show it moving, and it follows the device
+- The full Animara pack needs its license key once: Settings > Appearance > Animara license key
+
 ## 0.55.301 (2026-10-30)
 
 **Choose the icon of any device.**

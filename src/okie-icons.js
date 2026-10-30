@@ -160,6 +160,7 @@
     var ov = UI && UI.iconOverride ? UI.iconOverride(item.id) : '';      // the icon you chose for this device (device screen > pencil > Icon, or Home Assistant's own)
     if (ov) {
       if (DRAW[ov]) k = ov;                                               // one of the coloured drawings: drawn like any other
+      else if (UI.isAnimara(ov)) { if (UI.animaraAvailable()) return UI.animaraSlot(item.id, ov.slice(8), size || 48); }      // Animara's animated picture (filled in by UI.setIcon)
       else {
         var s = size || 48, inner = Math.round(s * 0.62), col0 = on ? accentOf(k) : OFF;
         var mk = UI.isMdi(ov) ? UI.mdiIcon(ov, inner, col0) : (UI.ICONS[ov] ? UI.icon(ov, inner) : '');

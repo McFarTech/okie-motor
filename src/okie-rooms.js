@@ -431,7 +431,7 @@
   /** A speaker or music player (Spotify ...): one row - the cover, who and what is playing, play-pause and next. Power shows only while it is off and only when it can be switched on. */
   function musicCard(ctx, item) {
     var t = function (k, v) { return core.t(k, ctx.lang(), v); };
-    var art = h('div.rc-art', { html: UI.icon('speaker', 38) }), cap = h('div.rc-mcap'), npT = h('b'), npS = h('span');
+    var art = h('div.rc-art'), cap = h('div.rc-mcap'), npT = h('b'), npS = h('span');
     var pw = h('button.rc-pw', { type: 'button', 'aria-label': t('d.power'), html: UI.icon('power', 22), onclick: function (e) { e.stopPropagation(); ctx.call('media_player', 'turn_on', { entity_id: item.id }).catch(function () {}); } });
     var play = h('button.rc-tr.play', { type: 'button', 'aria-label': 'Play / pause', onclick: function (e) { e.stopPropagation(); ctx.call('media_player', 'media_play_pause', { entity_id: item.id }).catch(function () {}); } });
     var next = h('button.rc-tr.nx', { type: 'button', 'aria-label': 'Next', html: UI.icon('next', 26), onclick: function (e) { e.stopPropagation(); ctx.call('media_player', 'media_next_track', { entity_id: item.id }).catch(function () {}); } });
@@ -439,6 +439,8 @@
     var el = h('div.rc.rc-media.rc-music', null, open, h('div.rc-ctl', null, pw, play, next));
     openIt(ctx, open, item); open.style.cursor = 'pointer';
     var picture = '';
+    var plainIcon = function () { UI.setIcon(art, UI.deviceIcon(item.id, 'speaker', 38)); };
+    plainIcon();
     function update() {
       var st = ctx.state(item.id); if (!st) return;
       var a = st.attributes || {}, s = st.state, gone = s === 'unavailable' || s === 'unknown', off = s === 'off' || s === 'standby', playing = s === 'playing';
@@ -451,7 +453,8 @@
       play.innerHTML = UI.icon(playing ? 'pause' : 'play', 24);
       play.disabled = next.disabled = gone || off;
       var pic = !gone && !off && a.entity_picture_local ? a.entity_picture_local : (!gone && !off && a.entity_picture ? a.entity_picture : '');
-      if (pic !== picture) { picture = pic; art.innerHTML = ''; if (pic) { var img = h('img', { src: pic, alt: '' }); img.addEventListener('error', function () { art.innerHTML = UI.icon('speaker', 38); picture = ''; }); art.appendChild(img); } else art.innerHTML = UI.icon('speaker', 38); }
+      if (pic !== picture) { picture = pic; art.innerHTML = ''; art._okieIcon = null; if (pic) { var img = h('img', { src: pic, alt: '' }); img.addEventListener('error', function () { picture = ''; plainIcon(); }); art.appendChild(img); } else plainIcon(); }
+      else if (!picture) plainIcon();
     }
     update();      // filled at once, not on the next state change
     return { el: el, update: update };
@@ -461,7 +464,7 @@
     var t = function (k, v) { return core.t(k, ctx.lang(), v); };
     var isTv = isTvItem(item);
     if (!isTv) return musicCard(ctx, item);
-    var art = h('div.rc-art', { html: UI.deviceIcon(item.id, isTv ? 'tv' : 'speaker', 38) }), name = h('div.rc-name', null, item.name), what = h('div.rc-sub');
+    var art = h('div.rc-art'), name = h('div.rc-name', null, item.name), what = h('div.rc-sub');
     var pw = h('button.rc-pw', { type: 'button', 'aria-label': t('d.power'), html: UI.icon('power', 20), onclick: function (e) { e.stopPropagation(); var on = ((ctx.state(item.id) || {}).state || 'off') !== 'off'; ctx.call('media_player', on ? 'turn_off' : 'turn_on', { entity_id: item.id }).catch(function () {}); } });
     var npT = h('b'), npS = h('span');
     var play = h('button.rc-tr', { type: 'button', 'aria-label': 'Play / pause', onclick: function (e) { e.stopPropagation(); ctx.call('media_player', 'media_play_pause', { entity_id: item.id }).catch(function () {}); } });
@@ -470,6 +473,8 @@
     var el = h('div.rc.rc-media', null, top, bot);
     openIt(ctx, top, item); el.classList.remove('open'); top.style.cursor = 'pointer';
     var picture = '';
+    var plainIcon = function () { UI.setIcon(art, UI.deviceIcon(item.id, isTv ? 'tv' : 'speaker', 38)); };
+    plainIcon();
     function update() {
       var st = ctx.state(item.id); if (!st) return;
       var a = st.attributes || {}, s = st.state, gone = s === 'unavailable' || s === 'unknown', off = s === 'off' || s === 'standby', playing = s === 'playing';
@@ -481,7 +486,8 @@
       play.innerHTML = UI.icon(playing ? 'pause' : 'play', 26);
       play.disabled = next.disabled = gone || off;
       var pic = !gone && !off && a.entity_picture_local ? a.entity_picture_local : (!gone && !off && a.entity_picture ? a.entity_picture : '');
-      if (pic !== picture) { picture = pic; art.innerHTML = ''; if (pic) { var img = h('img', { src: pic, alt: '' }); img.addEventListener('error', function () { art.innerHTML = UI.deviceIcon(item.id, isTv ? 'tv' : 'speaker', 38); picture = ''; }); art.appendChild(img); } else art.innerHTML = UI.deviceIcon(item.id, isTv ? 'tv' : 'speaker', 38); }
+      if (pic !== picture) { picture = pic; art.innerHTML = ''; art._okieIcon = null; if (pic) { var img = h('img', { src: pic, alt: '' }); img.addEventListener('error', function () { picture = ''; plainIcon(); }); art.appendChild(img); } else plainIcon(); }
+      else if (!picture) plainIcon();      // no cover art: the icon (an Animara one follows the state)
     }
     return { el: el, update: update };
   }
@@ -615,7 +621,7 @@
       shown.forEach(function (c) {
         var st = ctx.state(c.it.id), stateText = st ? L.stateLabel(st.state, ctx.lang()) : '', ic = c.it.domain === 'gadget' ? (c.it.deviceClass === 'light' ? 'grid' : 'tv') : UI.domainIcon(c.it.domain, c.it.deviceClass, st && st.state);
         list.appendChild(h('button.rm-pr' + (c.on ? '.on' : ''), { type: 'button', dataset: { id: c.it.id }, 'aria-pressed': c.on ? 'true' : 'false', onclick: function () { cfg.toggle(c.it.id); if (ctx.haptic) ctx.haptic(8); draw(); } },
-          h('span.pi', { html: ic ? UI.deviceIcon(c.it.id, ic, 20) : '' }),
+          (function () { var pi = h('span.pi'); if (ic) UI.setIcon(pi, UI.deviceIcon(c.it.id, ic, 20)); return pi; })(),
           h('span.pt', null, h('b', null, c.it.name), h('span', null, [c.it.area, stateText].filter(Boolean).join(' · '))),
           h('span.ck', { html: UI.icon('check', 16) })));
       });
