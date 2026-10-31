@@ -81,6 +81,7 @@
 
   // ------------------------------------------------------- changelog ----
   var CHANGELOG = [
+    { v: '0.55.313', date: '2026-10-31', tags: ['fix', 'sync'], md: '**Device names follow on every screen.**\n- A name you give a device (pencil > Rename) now shows at once on the other screens and for users who follow your setup; before, it waited for that device to change state' },
     { v: '0.55.312', date: '2026-10-31', tags: ['fix'], md: '**Room cards get their Animara icons on the phone too.**\n- In the iPhone app Animara often loads after the start screen is drawn; the room cards now pick up their Animara icons as soon as it is there (before, only the room page showed them)' },
     { v: '0.55.311', date: '2026-10-31', tags: ['new', 'sync'], md: '**One setup for every user.**\n- New in Settings > About > Backup & sync: Everyone sees this setup (admins). Turn it on in your admin account and every other Home Assistant user shows what you set there: rooms, icons, names, favorites, design. Changes reach their screens at once\n- Each screen keeps its own size; Sync status says whose setup a screen shows' },
     { v: '0.55.310', date: '2026-10-31', tags: ['new', 'sync'], md: '**See which user a screen syncs as.**\n- Settings > About > Backup & sync shows the Home Assistant user this screen is signed in as and when it last synced. Screens share settings only when they are signed in as the same user\n- New: Get settings from Home Assistant takes the shared copy at once (rooms, icons, names, favorites)' },

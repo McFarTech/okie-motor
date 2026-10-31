@@ -2,6 +2,11 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.313 (2026-10-31)
+
+**Device names follow on every screen.**
+- A name you give a device (pencil > Rename) now shows at once on the other screens and for users who follow your setup; before, it waited for that device to change state
+
 ## 0.55.312 (2026-10-31)
 
 **Room cards get their Animara icons on the phone too.**

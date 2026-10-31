@@ -652,7 +652,7 @@
       if (p && p.bento && p.bento.oneWidget !== undefined) { this._settings.set({ bento: { stacks: null, rightOrder: null, leftWidgets: [] } }); this._rebuildStart(); }      // one swipeable card or separate ones: the start screen is built again
       if (p && p.language !== undefined) { this._engine.setLang(this._lang()); this._renderDock(); if (this._search) this._search.refreshLabels(); }
       if (p && p.learning) this._engine.setSpeed(p.learning);
-      if (p && (p.visibility || p.excluded || p.limits || p.tidyNames !== undefined)) this._rebuildCollection(true);
+      if (p && (p.visibility || p.excluded || p.limits || p.tidyNames !== undefined || p.deviceNames !== undefined)) this._rebuildCollection(true);      // deviceNames: a name given on another screen (or by the admin who shares the setup) shows at once, not at the device's next state change
       if (p && p.search && this._search) this._search.applySettings();
       if (p && (p.quickControl || p.quickEnabled !== undefined || p.layout || p.search)) { if (this._search) this._search.rerun(); }
       if (p && p.sidebar) this._renderDock();
