@@ -683,7 +683,7 @@
       var c = cfg(), it = w1Items();
       var mode = w1Mode(it);
       var sig = [mode, c.w1layout, it.favorites.map(function (x) { return x.id; }).join(','), it.suggestions.map(function (x) { return x.id; }).join(','), mode === 'rooms' && g.OkieMotor.rooms ? g.OkieMotor.rooms.signature(ctx) : '', JSON.stringify(ctx.settings.get().cardStyle || {}), (c.leftWidgets || []).join(','), (c.rightCards || []).join(','), (Array.isArray(c.rightOrder) ? c.rightOrder.join(',') : '')].join('|');
-      if (!force && sig === w1sig) return;
+      if (!force && sig === w1sig) { if (mode === 'rooms' && g.OkieMotor.rooms && g.OkieMotor.rooms.refreshIcons) g.OkieMotor.rooms.refreshIcons(w1body); return; }      // nothing to draw again: the Animara icons of the room cards still take the new state
       w1sig = sig;
       Object.keys(tabEls).forEach(function (id) { var on = mode === id; tabEls[id].btn.classList.toggle('on', on); tabEls[id].btn.setAttribute('aria-selected', on ? 'true' : 'false'); tabEls[id].cnt.textContent = String(it[id].length); });
       Object.keys(viewEls).forEach(function (id) { var on = c.w1layout === id; viewEls[id].classList.toggle('on', on); viewEls[id].setAttribute('aria-pressed', on ? 'true' : 'false'); });
@@ -1134,6 +1134,7 @@
     var ro = null;
     if (typeof ResizeObserver === 'function') { ro = new ResizeObserver(sizeRows); ro.observe(root); }
     requestAnimationFrame(sizeRows);
+    disposers.push(ctx.settings.on('change', function (p) { if (p && w1 && (p.roomIcons !== undefined || p.roomPhotos !== undefined || p.roomIconEntity !== undefined)) { try { drawW1(false); } catch (e) { /* the next update draws it */ } } }));      // an icon or picture chosen for a room shows on its card at once
     disposers.push(ctx.settings.on('change', function (p) { if (p && p.bento && p.bento.swap !== undefined) { root.dataset.swap = ((ctx.settings.get().bento || {}).swap !== false) ? 'true' : 'false'; try { drawRight(); } catch (e) { /* Cameras above the slides: the right column takes its new order at once (it used to wait for a reload) */ } } if (p && (p.favorites || p.bento || p.rooms !== undefined || p.roomEdits !== undefined || p.roomsExtra !== undefined || p.roomsHidden !== undefined || p.roomsOrder !== undefined || p.roomNames !== undefined || p.cardStyle !== undefined)) drawW1(false); if (p && p.bento && (p.bento.w1height !== undefined || p.bento.wrheight !== undefined)) { applyHeight(); fitW1(); } if (p && p.bento && p.bento.feederDesign !== undefined && feederCard) { feederCard.update(); applyFeederHeight(); fitW1(); fadeSoon(); } }));
 
     return {

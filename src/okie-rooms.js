@@ -218,6 +218,7 @@
     '.rm-txt{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px;}.rm-name{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.rm-sub{font-size:13px;color:var(--okie-text-dim);}',
     '.rm-chev{flex:none;opacity:.6;}.rm-chev svg{width:18px;height:18px;display:block;}',
     '.rm-card.on .rm-ic{background:rgba(255,255,255,.9);color:#1d1b19;}',
+    '.rm-ic.ph{background-size:cover;background-position:center;}.rm-ic.anim{overflow:hidden;}.rm-card.on .rm-ic.anim{background:rgba(255,255,255,.22);}',
     '.rm-grid .rm-card{flex-direction:column;align-items:flex-start;gap:10px;padding:16px;}.rm-grid .rm-chev{display:none;}',
     // the taller cards of a room: the thermostat (big number, its colour on the right) and the TV / speaker (picture tile, now playing, controls)
     '.rc{position:relative;display:flex;box-sizing:border-box;width:100%;border-radius:26px;border:1px solid var(--glass-border-color);-webkit-backdrop-filter:var(--okie-card-bf,none);backdrop-filter:var(--okie-card-bf,none);background:var(--okie-tile,rgba(255,255,255,.1));color:var(--okie-text);overflow:hidden;-webkit-tap-highlight-color:transparent;text-align:left;font:inherit;}',
@@ -343,6 +344,19 @@
   }
   function orderOf(ctx, room) { var o = ctx.settings.get().roomOrder; return applyOrder(room.ids, o && o[room.id]); }
   function roomItems(ctx, room) { return orderOf(ctx, room).map(function (id) { return itemOf(ctx, id); }).filter(Boolean); }
+  /** The device an Animara icon of the room moves with: the one you chose (pencil > Icon > Moves with), else the room's first. */
+  function followEntity(ctx, room) {
+    var items = roomItems(ctx, room), own = (ctx.settings.get().roomIconEntity || {})[room.id];
+    if (own && items.some(function (x) { return x.id === own; })) return own;
+    return items[0] ? items[0].id : '';
+  }
+  /** The room's icon as the room page shows it (its own, an Animara one moving with a device, or the usual one), at any size: the room page and the room cards draw the same. */
+  function lookIcon(ctx, room, size) {
+    var ic = room.icon && UI.isAnimara(room.icon) ? room.icon : roomIcon(room), ent = UI.isAnimara(ic) ? followEntity(ctx, room) : '';
+    return ent && UI.animaraAvailable() ? UI.animaraSlot(ent, ic.slice(8), size) : UI.icon(UI.isAnimara(ic) ? roomIcon({ name: room.name }) : ic, size);
+  }
+  /** Gives the Animara icons of room cards the latest state, without drawing the cards again. */
+  function refreshIcons(root) { if (root) Array.prototype.forEach.call(root.querySelectorAll('.rm-ic'), function (el) { if (el._okieIcon) UI.setIcon(el, el._okieIcon); }); }
   function stats(ctx, room) {
     return summarize(room, function (id) { var it = itemOf(ctx, id), st = it && ctx.state(id); return it && st ? { domain: it.domain, state: st.state } : null; }, L.isOn);
   }
@@ -856,12 +870,8 @@
       setTimeout(function () { try { input.focus(); input.select(); } catch (e) { /* no focus */ } }, 60);
     }
     /** The room's own icon (one of the card's, or any Home Assistant icon) or a picture behind it. */
-    function roomEntity() {      // the device an Animara icon of the room moves with: the one you chose (pencil > Icon > Moves with), else the first
-      var items = roomItems(ctx, room), own = (ctx.settings.get().roomIconEntity || {})[room.id];
-      if (own && items.some(function (x) { return x.id === own; })) return own;
-      return items[0] ? items[0].id : '';
-    }
-    function heroIcon() { var ic = room.icon && UI.isAnimara(room.icon) ? room.icon : roomIcon(room), ent = UI.isAnimara(ic) ? roomEntity() : ''; return ent && UI.animaraAvailable() ? UI.animaraSlot(ent, ic.slice(8), 170) : UI.icon(UI.isAnimara(ic) ? roomIcon({ name: room.name }) : ic, 170); }
+    function roomEntity() { return followEntity(ctx, room); }
+    function heroIcon() { return lookIcon(ctx, room, 170); }
     function applyLook() {
       room = roomsNow(ctx).filter(function (r) { return r.id === roomId; })[0] || room;
       var hero = shell.el.querySelector('.dt-hero'), ib = shell.el.querySelector('.dt-iconbg'), old = hero && hero.querySelector('.dt-photo');
@@ -956,7 +966,7 @@
       rooms.forEach(function (r) {
         var s = stats(ctx, r);
         var card = h('button.rm-card' + (s.on ? '.on' : ''), { type: 'button', dataset: { room: r.id }, 'aria-label': r.name, onclick: function () { if (ctx.haptic) ctx.haptic(8); ctx.openApp(appId(r)); } },
-          h('span.rm-ic', { html: UI.icon(roomIcon(r), 24) }),
+          roomBadge(ctx, r),
           h('span.rm-txt', null, h('span.rm-name', null, r.name), h('span.rm-sub', null, subtitle(ctx, r))),
           h('span.rm-chev', { html: UI.icon('chevron', 18) }));
         var mv = orderButtons(ctx, o, r.id, grid);
@@ -970,9 +980,16 @@
     return wrap;
   }
 
+  /** The round icon of a room card: the room's picture if it has one, else the icon its page shows (an Animara one moves with its device). */
+  function roomBadge(ctx, r) {
+    if (r.photo) return h('span.rm-ic.ph', { style: { backgroundImage: 'url("' + String(r.photo).replace(/["\\]/g, '') + '")' } });
+    var el = h('span.rm-ic'); UI.setIcon(el, lookIcon(ctx, r, 24));
+    if (el.querySelector('.okie-anim')) { el.classList.add('anim'); UI.setIcon(el, lookIcon(ctx, r, 44)); }      // an Animara picture fills the circle, like the big one on the room page
+    return el;
+  }
   /** The cards redraw when anything about the rooms changes: their names, their devices or how many are on. */
   function signature(ctx) {
-    return roomsNow(ctx).map(function (r) { var s = stats(ctx, r); return r.id + ':' + r.name + ':' + r.ids.length + ':' + s.total + ':' + s.on; }).join('|');
+    return roomsNow(ctx).map(function (r) { var s = stats(ctx, r); return r.id + ':' + r.name + ':' + r.ids.length + ':' + s.total + ':' + s.on + ':' + (r.icon || '') + ':' + (r.photo || '') + ':' + (UI.isAnimara(r.icon) ? followEntity(ctx, r) : ''); }).join('|');      // and their look: an icon or picture chosen on the room page shows on its card at once
   }
 
   // ------------------------------------------------ across devices ----
@@ -1015,7 +1032,7 @@
   };
   api.gripButton = gripButton; api.sideButton = sideButton;
   api.styleOf = styleOf; api.listCard = listCard; api.richCard = richCard; api.addButton = addButton;
-  api.createSorter = createSorter; api.endDrag = function () { if (activeSort) activeSort(true); }; api.tileOrder = tileOrder; api.rooms = roomsNow; api.renderCards = renderCards; api.signature = signature; api.roomItems = roomItems; api.renderRoom = renderRoom;
+  api.createSorter = createSorter; api.endDrag = function () { if (activeSort) activeSort(true); }; api.tileOrder = tileOrder; api.rooms = roomsNow; api.renderCards = renderCards; api.refreshIcons = refreshIcons; api.lookIcon = lookIcon; api.signature = signature; api.roomItems = roomItems; api.renderRoom = renderRoom;
   g.OkieMotor.defaults = Object.assign(g.OkieMotor.defaults || {}, { rooms: [], roomOrder: {}, roomsOrder: [], roomEdits: {}, cardStyle: {}, roomsExtra: [], roomsHidden: [], roomNames: {}, roomIcons: {}, roomPhotos: {}, roomIconEntity: {} });
   g.OkieMotor.rooms = api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

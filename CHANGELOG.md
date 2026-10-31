@@ -2,6 +2,12 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.309 (2026-10-31)
+
+**Room cards show the room's own icon.**
+- The cards on the Rooms tab of the start screen show the same icon as the room page: an icon you chose, an Animara icon (moving with the same device), or the room's picture
+- A new icon or picture shows on the card at once
+
 ## 0.55.308 (2026-10-31)
 
 **Safer, tidier, and the update notice works with HACS.**
