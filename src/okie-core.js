@@ -205,9 +205,13 @@
     return {
       register: function (app) {
         if (!app || !app.id) throw new Error('app needs an id');
-        apps.set(app.id, Object.assign({ order: 100, category: 'system' }, app));
+        var entry = Object.assign({ order: 100, category: 'system' }, app);
+        apps.set(app.id, entry);
         bus.emit('change', { id: app.id, type: 'register' });
-        return function () { apps.delete(app.id); bus.emit('change', { id: app.id, type: 'unregister' }); };
+        return function () {      // takes away only this registration: a card that is torn down after a new one started must not take the new one's apps with it
+          if (apps.get(app.id) !== entry) return;
+          apps.delete(app.id); bus.emit('change', { id: app.id, type: 'unregister' });
+        };
       },
       get: function (id) { return apps.get(id) || null; },
       list: function (filter) {

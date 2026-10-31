@@ -2,6 +2,11 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.314 (2026-10-31)
+
+**A tap on a room always opens it.**
+- Sometimes (mostly in the iPhone app) a tap on a room card did nothing until the page was refreshed: the room was shown before it was ready to open, or a card the app rebuilt took the new card's rooms away. Both are fixed
+
 ## 0.55.313 (2026-10-31)
 
 **Device names follow on every screen.**

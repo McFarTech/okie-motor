@@ -940,7 +940,7 @@
     rooms.forEach(function (r, i) {
       seen[r.id] = true;
       var key = r.name + '|' + roomIcon(r) + '|' + i;       // the place in the list counts: the apps follow the order that was arranged
-      if (registered[r.id] && registered[r.id].key === key) return;
+      if (registered[r.id] && registered[r.id].key === key && A().get(appId(r))) return;      // still there (an app the registry lost is put back)
       if (registered[r.id]) registered[r.id].off();
       var rid = r.id;
       registered[r.id] = { key: key, off: A().register({ id: appId(r), name: r.name, icon: roomIcon(r), color: GRADIENTS[i % GRADIENTS.length][1], order: 200 + i, category: 'rooms', render: function (container, c) { return renderRoom(container, c, rid); } }) };
@@ -951,6 +951,7 @@
 
   /** The cards of the Rooms tab. layout: 'list' | 'grid'. While the widget is edited every card has a button that removes the room, and a "New room" button ends the list. */
   function renderCards(ctx, layout, scroller) {
+    syncApps(ctx);      // every card drawn has its room ready to open
     var t = function (k, v) { return core.t(k, ctx.lang(), v); };
     var rooms = syncApps(ctx), wrap = h('div');
     function removeRoom(r) {
@@ -965,7 +966,7 @@
       o.sorter = createSorter(ctx, { scroller: function () { return scroller || wrap.parentNode; }, nodes: function () { return nodes; }, order: function () { return ids; }, apply: o.save });
       rooms.forEach(function (r) {
         var s = stats(ctx, r);
-        var card = h('button.rm-card' + (s.on ? '.on' : ''), { type: 'button', dataset: { room: r.id }, 'aria-label': r.name, onclick: function () { if (ctx.haptic) ctx.haptic(8); ctx.openApp(appId(r)); } },
+        var card = h('button.rm-card' + (s.on ? '.on' : ''), { type: 'button', dataset: { room: r.id }, 'aria-label': r.name, onclick: function () { if (ctx.haptic) ctx.haptic(8); if (!A().get(appId(r))) syncApps(ctx); ctx.openApp(appId(r)); } },      // a room whose app is not there yet (Home Assistant's areas came after the start, the iPhone app rebuilt the card) is registered on the tap, so the tap always opens it
           roomBadge(ctx, r),
           h('span.rm-txt', null, h('span.rm-name', null, r.name), h('span.rm-sub', null, subtitle(ctx, r))),
           h('span.rm-chev', { html: UI.icon('chevron', 18) }));

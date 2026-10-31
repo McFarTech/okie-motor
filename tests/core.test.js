@@ -164,3 +164,13 @@ test('settings: reset() tells listeners which key went back, defaultOf() reads t
   s.reset();
   assert.deepEqual(seen[seen.length - 1], {});
 });
+
+test('registry: taking away an old registration leaves a newer one with the same id in place', () => {
+  const R = core.createRegistry();
+  const offOld = R.register({ id: 'room:x', name: 'old' });
+  const offNew = R.register({ id: 'room:x', name: 'new' });      // a rebuilt card registers again before the old one is torn down
+  offOld();
+  assert.equal(R.get('room:x') && R.get('room:x').name, 'new', 'the old card must not take the new one\'s room away');
+  offNew();
+  assert.equal(R.get('room:x'), null);
+});
