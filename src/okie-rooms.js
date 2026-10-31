@@ -989,7 +989,7 @@
   }
   /** The cards redraw when anything about the rooms changes: their names, their devices or how many are on. */
   function signature(ctx) {
-    return roomsNow(ctx).map(function (r) { var s = stats(ctx, r); return r.id + ':' + r.name + ':' + r.ids.length + ':' + s.total + ':' + s.on + ':' + (r.icon || '') + ':' + (r.photo || '') + ':' + (UI.isAnimara(r.icon) ? followEntity(ctx, r) : ''); }).join('|');      // and their look: an icon or picture chosen on the room page shows on its card at once
+    return roomsNow(ctx).map(function (r) { var s = stats(ctx, r); return r.id + ':' + r.name + ':' + r.ids.length + ':' + s.total + ':' + s.on + ':' + (r.icon || '') + ':' + (r.photo || '') + ':' + (UI.isAnimara(r.icon) ? followEntity(ctx, r) + (UI.animaraAvailable() ? ':a' : ':-') : ''); }).join('|');      /* :a: Animara has loaded (on a phone it often comes after the first drawing, so the cards are drawn again with its icons) */      // and their look: an icon or picture chosen on the room page shows on its card at once
   }
 
   // ------------------------------------------------ across devices ----

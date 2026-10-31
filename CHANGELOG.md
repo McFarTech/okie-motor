@@ -2,6 +2,11 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.312 (2026-10-31)
+
+**Room cards get their Animara icons on the phone too.**
+- In the iPhone app Animara often loads after the start screen is drawn; the room cards now pick up their Animara icons as soon as it is there (before, only the room page showed them)
+
 ## 0.55.311 (2026-10-31)
 
 **One setup for every user.**
