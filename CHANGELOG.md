@@ -2,6 +2,12 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.310 (2026-10-31)
+
+**See which user a screen syncs as.**
+- Settings > About > Backup & sync shows the Home Assistant user this screen is signed in as and when it last synced. Screens share settings only when they are signed in as the same user
+- New: Get settings from Home Assistant takes the shared copy at once (rooms, icons, names, favorites)
+
 ## 0.55.309 (2026-10-31)
 
 **Room cards show the room's own icon.**

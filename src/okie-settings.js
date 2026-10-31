@@ -232,6 +232,8 @@
     { id: 'a_base', tab: 'about', group: yes('About Okie Motor', 'Über den Okie Motor'), type: 'info', label: yes('Built on', 'Aufgebaut auf'), desc: yes('Thank you to fastender (Fast Search Card, the design this card comes from) and willsanderson (Hemma, the framework it was first made for). Without them it would not exist.', 'Danke an fastender (Fast Search Card, das Design, von dem diese Karte kommt) und willsanderson (Hemma, das Gerüst, für das sie zuerst gebaut wurde). Ohne sie gäbe es sie nicht.'), info: 'Fast Search Card · Hemma' },
     { id: 'a_shapes', tab: 'about', group: yes('About Okie Motor', 'Über den Okie Motor'), type: 'info', label: yes('Card shapes', 'Kartenformen'), desc: yes('Where the squircle curves come from', 'Woher die Squircle-Kurven kommen'), info: 'Fast Search Card · GPL-3.0' },
     { id: 'b_sync', tab: 'about', group: yes('Backup & sync', 'Sicherung & Abgleich'), type: 'toggle', path: 'sync.enabled', label: yes('Same settings on every screen', 'Gleiche Einstellungen auf jedem Bildschirm'), desc: yes('Favorites, rooms, design and everything you set are kept in Home Assistant for your user, so the browser, the phone app and the wall tablet show the same. The size of the card stays per screen.', 'Favoriten, Räume, Design und alles, was du einstellst, liegen in Home Assistant bei deinem Benutzer: Browser, Handy-App und Wand-Tablet zeigen dasselbe. Die Größe der Karte bleibt pro Bildschirm.') },
+    { id: 'b_status', tab: 'about', group: yes('Backup & sync', 'Sicherung & Abgleich'), type: 'info', label: yes('Sync status', 'Abgleich-Status'), desc: yes('The Home Assistant user this screen is signed in as, and when it last synced. Your screens share settings only when they show the same user.', 'Der Home-Assistant-Benutzer dieses Bildschirms und wann er zuletzt abgeglichen hat. Bildschirme teilen Einstellungen nur mit demselben Benutzer.'), info: 'syncStatus' },
+    { id: 'b_pull', tab: 'about', group: yes('Backup & sync', 'Sicherung & Abgleich'), type: 'action', action: 'pullSettings', label: yes('Get settings from Home Assistant', 'Einstellungen aus Home Assistant holen'), desc: yes('Replace what this screen shows with the shared copy your other screens use (rooms, icons, names, favorites). The size of the card stays.', 'Ersetzt, was dieser Bildschirm zeigt, durch die geteilte Kopie deiner anderen Bildschirme (Räume, Symbole, Namen, Favoriten). Die Größe bleibt.') },
     { id: 'b_export', tab: 'about', group: yes('Backup & sync', 'Sicherung & Abgleich'), type: 'action', action: 'exportSettings', label: yes('Export settings', 'Einstellungen exportieren'), desc: yes('Save all your settings, favorites and arrangement as a file', 'Alle Einstellungen, Favoriten und die Anordnung als Datei sichern') },
     { id: 'b_import', tab: 'about', group: yes('Backup & sync', 'Sicherung & Abgleich'), type: 'action', action: 'importSettings', label: yes('Import settings', 'Einstellungen importieren'), desc: yes('Load a file you exported before: it replaces the settings of this card (also in another Home Assistant)', 'Eine zuvor exportierte Datei laden: sie ersetzt die Einstellungen dieser Karte (auch in einem anderen Home Assistant)') },
     { id: 'a_cache', tab: 'about', group: yes('Privacy & security', 'Datenschutz & Sicherheit'), type: 'action', label: yes('Clear Cache', 'Cache leeren'), desc: yes('Forget cached searches, forecasts and probed video files. Nothing you set is lost.', 'Zwischengespeicherte Suchen, Vorhersagen und geprüfte Videodateien vergessen. Nichts von deinen Einstellungen geht verloren.'), action: 'clearCache' },
@@ -397,7 +399,7 @@
     }
     function infoItem(row) {
       if (row.info === 'diag') return h('div.ios-item.ios-diag', null, h('div.ios-item-content', null, h('div.ios-item-label', null, P(row.label)), h('div.ios-item-subtitle', null, P(row.desc))), h('pre.diag-pre', null, g.OkieMotor.diagInfo ? g.OkieMotor.diagInfo(ctx.host) : '-'));
-      var v = row.info === 'version' ? 'v' + (g.OkieMotor.version || 'dev') : (row.info === 'build' ? String(g.OkieMotor.build || '–') : (row.info === 'layout' ? (g.OkieMotor.layoutInfo ? g.OkieMotor.layoutInfo() : '–') : row.info));
+      var v = row.info === 'version' ? 'v' + (g.OkieMotor.version || 'dev') : (row.info === 'build' ? String(g.OkieMotor.build || '–') : (row.info === 'layout' ? (g.OkieMotor.layoutInfo ? g.OkieMotor.layoutInfo() : '–') : (row.info === 'syncStatus' ? (g.OkieMotor.sync && g.OkieMotor.sync.statusText ? g.OkieMotor.sync.statusText(ctx) : '–') : row.info)));
       return itemBase(row, h('span.ios-item-value', null, v));
     }
     function runAction(row) {
@@ -410,6 +412,8 @@
         ctx.toast('success', P(yes('Dial look reset', 'Aussehen zurückgesetzt'))); refresh();
       } else if (row.action === 'exportSettings') {
         if (g.OkieMotor.sync) g.OkieMotor.sync.exportNow(ctx);
+      } else if (row.action === 'pullSettings') {
+        if (g.OkieMotor.sync && g.OkieMotor.sync.pullNow) g.OkieMotor.sync.pullNow(ctx).then(function () { refresh(); draw(); });
       } else if (row.action === 'importSettings') {
         if (g.OkieMotor.sync) g.OkieMotor.sync.importFlow(ctx);
       } else if (row.action === 'clearCache') {

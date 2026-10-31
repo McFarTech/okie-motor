@@ -1003,11 +1003,11 @@
     var t = Date.now(); ctx.store.set('rooms.t', t);
     return ctx.callWS({ type: 'frontend/set_user_data', key: SYNC_KEY, value: { t: t, data: snapshot(ctx) } }).catch(function () { /* offline or no permission: the local copy still works */ });
   }
-  function pullNow(ctx) {
+  function pullNow(ctx, force) {
     return ctx.callWS({ type: 'frontend/get_user_data', key: SYNC_KEY }).then(function (r) {
       var v = r && r.value;
-      if (!v || typeof v !== 'object' || !v.data) { if (hasData(snapshot(ctx))) return pushNow(ctx); return null; }      // nothing stored yet: this device's arrangement becomes the shared one
-      if ((+v.t || 0) <= (+ctx.store.get('rooms.t', 0) || 0)) return null;
+      if (!v || typeof v !== 'object' || !v.data) { if (force) return false; if (hasData(snapshot(ctx))) return pushNow(ctx); return null; }      // nothing stored yet: this device's arrangement becomes the shared one
+      if (!force && (+v.t || 0) <= (+ctx.store.get('rooms.t', 0) || 0)) return null;      // force: Get settings from Home Assistant takes the shared rooms whatever the times say
       applying = true;
       try {
         SYNC_FIELDS.forEach(function (k) { ctx.settings.reset(k); });

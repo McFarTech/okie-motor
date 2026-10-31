@@ -64,11 +64,12 @@
 
   api.mount = function (ctx) {
     var applying = false, pushTimer = 0, pulled = false, off = null, timer = 0;
+    status = { checked: 0, remoteT: 0, pushed: 0, error: '' };
     var noop = function () { return null; };
     function enabled() { var s = (ctx.settings.get().sync || {}); return s.enabled !== false; }
     function pushNow() {
       if (!enabled()) return Promise.resolve(null);
-      var t = Date.now(); ctx.store.set('settings.t', t);
+      var t = Date.now(); ctx.store.set('settings.t', t); status.pushed = t;
       return ctx.callWS({ type: 'frontend/set_user_data', key: KEY, value: { t: t, data: shared(userOf(ctx)) } }).catch(noop);
     }
     /** Replaces this screen's settings; the old ones are kept once in "settings.backup" so nothing is lost for good. */
@@ -77,18 +78,19 @@
       applying = true;
       try { ctx.settings.reset(); ctx.settings.set(next); } finally { applying = false; }
     }
-    function pullNow() {
-      if (!enabled()) { pulled = true; return Promise.resolve(null); }
+    function pullNow(force) {
+      if (!enabled() && !force) { pulled = true; return Promise.resolve(null); }
       return ctx.callWS({ type: 'frontend/get_user_data', key: KEY }).then(function (r) {
         var v = r && r.value, mine = shared(userOf(ctx)), t0 = +ctx.store.get('settings.t', 0) || 0;
-        pulled = true;
+        pulled = true; status.checked = Date.now(); status.remoteT = v && v.data ? +v.t || 0 : 0; status.error = '';
+        if (force) { if (!v || typeof v !== 'object' || !v.data) return false; applyUser(combine(v.data, userOf(ctx))); ctx.store.set('settings.t', +v.t || Date.now()); return true; }      // Get settings from Home Assistant: the shared copy, whatever the times say
         if (!v || typeof v !== 'object' || !v.data) { return size(mine) > 0 ? pushNow() : null; }      // nothing stored yet: this screen's settings become the shared ones
         if (t0 === 0 && size(mine) > 0 && firstSyncWinner(mine, v.data) === 'local') return pushNow();   // never synced and richer than the shared copy: do not wipe it
         if ((+v.t || 0) <= t0) return null;
         applyUser(combine(v.data, userOf(ctx)));
         ctx.store.set('settings.t', +v.t);
         return true;
-      }, function () { pulled = true; return null; });
+      }, function (e) { pulled = true; status.checked = Date.now(); status.error = String((e && (e.message || e.code)) || 'failed'); return force ? Promise.reject(e) : null; });
     }
     off = ctx.settings.on('change', function () {
       if (applying || !pulled) return;                      // a first pull comes before any push, so a fresh screen never overwrites the shared copy
@@ -98,8 +100,37 @@
     document.addEventListener('visibilitychange', visible);
     timer = setInterval(pullNow, 5 * 60000);
     pullNow();
-    live = { ctx: ctx, pushNow: pushNow, applyUser: applyUser };
+    live = { ctx: ctx, pushNow: pushNow, applyUser: applyUser, pullNow: pullNow };
     return { dispose: function () { if (off) off(); clearTimeout(pushTimer); clearInterval(timer); document.removeEventListener('visibilitychange', visible); if (live && live.ctx === ctx) live = null; } };
+  };
+
+  // ------------------------------------------------------------ status / get now ----
+  var status = { checked: 0, remoteT: 0, pushed: 0, error: '' };
+  function when(t, de0) {
+    if (!t) return de0 ? 'nie' : 'never';
+    var d = new Date(t), p = function (n) { return (n < 10 ? '0' : '') + n; }, today = new Date().toDateString() === d.toDateString();
+    return (today ? '' : d.getDate() + '.' + (d.getMonth() + 1) + '. ') + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  /** Settings > About > Backup & sync: who this screen is signed in as and when it last talked to Home Assistant, so two screens can be compared. */
+  api.statusText = function (ctx) {
+    ctx = ctx || (live && live.ctx); if (!ctx) return '–';
+    var d = de(ctx), hs = ctx.hass ? ctx.hass() : null, user = hs && hs.user ? (hs.user.name || hs.user.id || '?') : '?';
+    var mine = +ctx.store.get('settings.t', 0) || 0;
+    if (status.error) return say(ctx, 'User ' + user + ' · could not reach Home Assistant (' + status.error + ')', 'Benutzer ' + user + ' · Home Assistant nicht erreicht (' + status.error + ')');
+    return d ? 'Benutzer ' + user + ' · geteilte Kopie ' + when(status.remoteT, d) + ' · dieser Bildschirm ' + when(mine, d) + ' · geprüft ' + when(status.checked, d)
+             : 'User ' + user + ' · shared copy ' + when(status.remoteT, d) + ' · this screen ' + when(mine, d) + ' · checked ' + when(status.checked, d);
+  };
+  /** Get settings from Home Assistant: replaces this screen's settings and rooms with the shared copy now (a backup of the old ones is kept). */
+  api.pullNow = function (ctx) {
+    ctx = ctx || (live && live.ctx); if (!ctx || !live) return Promise.resolve(false);
+    var RM = g.OkieMotor.rooms;
+    return live.pullNow(true).then(function (got) {
+      return (RM && RM.sync && RM.sync.pull ? RM.sync.pull(ctx, true) : Promise.resolve(null)).then(function (gotRooms) {
+        var ok = got || gotRooms;
+        ctx.toast(ok ? 'success' : 'info', ok ? say(ctx, 'Settings taken from Home Assistant', 'Einstellungen aus Home Assistant übernommen') : say(ctx, 'Home Assistant has no shared settings for this user yet', 'Home Assistant hat für diesen Benutzer noch keine geteilten Einstellungen'));
+        return !!ok;
+      });
+    }, function () { ctx.toast('error', say(ctx, 'Could not reach Home Assistant', 'Home Assistant nicht erreicht')); return false; });
   };
 
   // ------------------------------------------------------------ export / import ----
