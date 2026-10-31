@@ -42,7 +42,7 @@
     glass: { brightness: 100, blur: 20, contrast: 100, saturation: 100, grayscale: 0, tint: 76, cardBlur: 60, cardTint: 21, cardStyle: 'dark', cardEdge: 14 },      // cardBlur: frosted blur behind the device cards (px, 0 = clear); cardTint: how much light or dark tint they carry (%); cardStyle: light (white) or dark glass; cardEdge: the thin light rim that keeps clear glass readable (%)
     thermo: { glowBlur: 80, glowSpread: 15, glowOpacity: 65, ticks: 100, c0: '#1446be', c1: '#2d82ff', c2: '#ff962d', c3: '#ff2d55', cool: 69, warm: 75 },      // the Thermo Dial's look (okie-thermo.js DEFAULT_LOOK)
     toasts: { enabled: true, closable: false },
-    sidebar: { show: true, always: true, items: null },
+    sidebar: { show: true, always: true, items: null, iconSize: 100 },
     videos: { enabled: true, mobile: true, path: '/local/fast-search-videos' },
     zen: { enabled: true, text: 'auto', name: '', quoteEntity: 'sensor.quote_of_the_day', keepOpen: true },
     search: { filterBy: 'categories', columns: 5, recent: 'standard', typewriter: true, context: true, chips: true, filterButton: true, count: true, timeSort: true, ai: true },
@@ -597,6 +597,7 @@
       this.style.setProperty('--okie-card-edge', edge > 0 ? 'inset 0 0 0 1px rgba(255,255,255,' + (+(edge / 100).toFixed(3)) + '),inset 0 1.5px 0 rgba(255,255,255,' + (+Math.min(0.9, edge / 100 * 1.8).toFixed(3)) + ')' : 'none');
       this._stage.dataset.cardblur = cardBlur > 0 ? 'on' : 'off';      // a mask on a parent hides the picture from a blurred card, so the scroll fades step aside while Card blur is on
       this._stage.dataset.dock = s.sidebar.show === false ? 'off' : (s.sidebar.always === false ? 'panel' : 'always');
+      this._stage.style.setProperty('--vpm-s', String(Math.max(1, Math.min(2, (+s.sidebar.iconSize || 100) / 100))));      // Dock icon size (Settings > General > Dock)
       this._stage.dataset.bento = s.bento.enabled === false ? 'off' : 'on';
       this._bg.style.backgroundImage = local ? 'url("' + String(s.wallpaper).replace(/"/g, '%22') + '")' : '';
       this._bg.classList.toggle('on', local);
@@ -655,7 +656,7 @@
       if (p && (p.visibility || p.excluded || p.limits || p.tidyNames !== undefined || p.deviceNames !== undefined)) this._rebuildCollection(true);      // deviceNames: a name given on another screen (or by the admin who shares the setup) shows at once, not at the device's next state change
       if (p && p.search && this._search) this._search.applySettings();
       if (p && (p.quickControl || p.quickEnabled !== undefined || p.layout || p.search)) { if (this._search) this._search.rerun(); }
-      if (p && p.sidebar) this._renderDock();
+      if (p && p.sidebar) { if (p.sidebar.iconSize !== undefined) this._stage.style.setProperty('--vpm-s', String(Math.max(1, Math.min(2, (+this._settings.get().sidebar.iconSize || 100) / 100)))); this._renderDock(); }
       if (p && p.animaraKey !== undefined) UI.setAnimaraKey(this._settings.get().animaraKey || '');
       if (p && (p.deviceIcons !== undefined || p.haIcons !== undefined || p.animaraKey !== undefined)) { this._rebuildStart(); if (this._search) this._search.rerun(); }      // a new icon for a device: the tiles draw it at once
       if (p && p.zen) { var on = !!(this._settings.get().zen || {}).enabled; if (!on && this._zenView) { this._setLocked(false); this._zenView.dispose(); this._zenView.el.remove(); this._zenView = null; } }

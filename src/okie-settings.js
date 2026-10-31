@@ -154,6 +154,7 @@
       options: [{ id: 'todos', label: yes('To-do', 'Aufgaben') }, { id: 'news', label: yes('News', 'Nachrichten') }, { id: 'tips', label: yes('Tips', 'Tipps') }, { id: 'chronicle', label: yes('Recently in the house', 'Zuletzt im Haus') }, { id: 'none', label: yes('None', 'Keins') }] },
 
     // ---- General: sidebar page ----
+    { id: 'dock_size', tab: 'general', page: 'sidebar', group: yes('Look', 'Aussehen'), type: 'slider', path: 'sidebar.iconSize', min: 100, max: 180, step: 10, unit: '%', label: yes('Icon size', 'Symbolgröße'), desc: yes('How big the icons of the dock are (the bar at the bottom on a phone, the rail beside the card on a big screen)', 'Wie groß die Symbole im Dock sind (die Leiste unten am Handy, die Leiste neben der Karte auf großen Bildschirmen)') },
     { id: 'sidebar', tab: 'general', page: 'sidebar', group: yes('Available items', 'Verfügbare Einträge'), type: 'sidebar', path: 'sidebar.items', label: yes('Dock items', 'Dock-Einträge'), desc: yes('Choose which apps appear in the dock and in which order. Home is always there.', 'Welche Apps im Dock erscheinen und in welcher Reihenfolge. Start ist immer da.') },
 
     // ---- General: suggestions page ----

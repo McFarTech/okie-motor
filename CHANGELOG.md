@@ -2,6 +2,11 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.315 (2026-10-31)
+
+**Bigger dock icons.**
+- New: Settings > General > Sidebar > Icon size (100–180%) makes the icons of the dock bigger: the bar at the bottom of a phone and the rail beside the card
+
 ## 0.55.314 (2026-10-31)
 
 **A tap on a room always opens it.**
