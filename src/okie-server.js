@@ -319,7 +319,7 @@
       histAt = Date.now(); var my = ++histToken, to = Date.now(), from = to - 3600e3;
       var one = function (id) {
         var path = 'history/period/' + new Date(from).toISOString() + '?filter_entity_id=' + encodeURIComponent(id) + '&end_time=' + encodeURIComponent(new Date(to).toISOString()) + '&minimal_response&no_attributes';
-        return Promise.resolve(ctx.hass().callApi('GET', path)).then(function (res) {
+        return new Promise(function (ok) { ok(ctx.hass().callApi('GET', path)); }).then(function (res) {
           return ((res && res[0]) || []).map(function (r) { return { t: Date.parse(r.last_changed || r.last_updated), v: parseFloat(r.state) }; }).filter(function (p) { return isFinite(p.t) && isFinite(p.v); });
         }, function () { return []; });
       };

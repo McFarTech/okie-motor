@@ -409,3 +409,23 @@ test('importPatterns replays another card\'s history in time order: clicks add, 
   assert.equal(done, 5, 'the entry without a time is skipped');
   assert.ok(e.usageOf(a.id) > e.usageOf(b.id), 'three recent clicks outweigh one old click with an ignore');
 });
+
+test('short device names: the only entity of its kind takes the device name', () => {
+  const S2 = require('../src/okie-search.js');
+  assert.equal(S2.tidyName('Living Room TV Television', 'Living Room TV', true), 'Living Room TV');
+  assert.equal(S2.tidyName('Living Room TV Television', 'Living Room TV', false), 'Living Room TV Television', 'several of a kind keep the full name');
+  assert.equal(S2.tidyName('Kitchen Lamp', 'Hue Go', true), 'Kitchen Lamp', 'a name that does not start with the device name stays');
+  assert.equal(S2.tidyName('Living Room TV', 'Living Room TV', true), 'Living Room TV');
+  assert.equal(S2.tidyName('Lamp', '', true), 'Lamp');
+  const hass = {
+    states: { 'media_player.tv': { state: 'on', attributes: { friendly_name: 'Living Room TV Television' } }, 'remote.tv': { state: 'on', attributes: { friendly_name: 'Living Room TV Remote' } },
+      'light.a': { state: 'on', attributes: { friendly_name: 'Bridge Light 1' } }, 'light.b': { state: 'on', attributes: { friendly_name: 'Bridge Light 2' } } },
+    entities: { 'media_player.tv': { device_id: 'd1' }, 'remote.tv': { device_id: 'd1' }, 'light.a': { device_id: 'd2' }, 'light.b': { device_id: 'd2' } },
+    devices: { d1: { name: 'Living Room TV' }, d2: { name: 'Bridge' } }, areas: {},
+  };
+  const names = o => Object.fromEntries(S2.buildCollection(hass, o).map(i => [i.id, i.name]));
+  assert.equal(names({ tidyNames: true })['media_player.tv'], 'Living Room TV');
+  assert.equal(names({ tidyNames: true })['remote.tv'], 'Living Room TV', 'one of each kind per device');
+  assert.equal(names({ tidyNames: true })['light.a'], 'Bridge Light 1', 'two lights on one device keep their names');
+  assert.equal(names({})['media_player.tv'], 'Living Room TV Television', 'switched off: Home Assistant\'s name');
+});

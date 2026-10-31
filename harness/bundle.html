@@ -34,6 +34,7 @@ if (/[?&]fakevoice=1/.test(location.search)) {
 </script>
 <script>if (/[?&]bridge=1/.test(location.search)) window.__okieBridge = {};  // dev: acts like the Okie Home app (the page keeps where you were)</script>
 <script src="../dist/okie-motor.js"></script>
+<script src="mock-robomap.js"></script>
 <script src="mock-hass.js"></script>
 <script>
   var q = new URLSearchParams(location.search); window.__lang = q.get('lang') || 'en';

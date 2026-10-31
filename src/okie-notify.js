@@ -83,14 +83,30 @@
     { id: 'n_qto', tab: 'general', group: { en: 'Quiet hours', de: 'Ruhezeiten' }, type: 'text', path: 'notifications.quietTo', placeholder: '07:00', label: { en: 'Quiet hours end', de: 'Ruhezeit bis' }, desc: { en: 'When quiet hours end, in 24 hour format.', de: 'Wann die Ruhezeit endet, im 24-Stunden-Format.' } },
   ];
 
-  var api = { deriveAlerts: deriveAlerts, fromPersistent: fromPersistent, filterNotes: filterNotes, summary: summary, sources: sources, sortNotes: sortNotes, toastAllowed: toastAllowed, SEVERITY: SEVERITY , DEFAULTS: DEFAULTS, SETTINGS_ROWS: SETTINGS_ROWS };
+  /** Where to ask whether a newer card is installed, for every way of installing it: next to the card file itself (HACS serves /hacsfiles/okie-motor/, by hand /local/),
+   *  then the Hemma address. Pure, tested. */
+  function versionUrls(scriptUrls, fixed) {
+    var out = [];
+    (scriptUrls || []).forEach(function (u) {
+      var m = /^(.*\/)okie-motor(\.min)?\.js(\?.*)?$/.exec(String(u || ''));
+      if (m && out.indexOf(m[1] + 'okie-version.json') < 0) out.push(m[1] + 'okie-version.json');
+    });
+    if (fixed && out.indexOf(fixed) < 0) out.push(fixed);
+    return out;
+  }
+  /** Did the card file change since this page loaded it? Compares what the server says about it (ETag, Last-Modified, size). Pure, tested. */
+  function fileChanged(first, now) {
+    if (!first || !now) return false;
+    return ['etag', 'last-modified', 'content-length'].some(function (k) { return first[k] && now[k] && first[k] !== now[k]; });
+  }
+  var api = { versionUrls: versionUrls, fileChanged: fileChanged, deriveAlerts: deriveAlerts, fromPersistent: fromPersistent, filterNotes: filterNotes, summary: summary, sources: sources, sortNotes: sortNotes, toastAllowed: toastAllowed, SEVERITY: SEVERITY , DEFAULTS: DEFAULTS, SETTINGS_ROWS: SETTINGS_ROWS };
   if (isNode) { module.exports = api; return; }
   if (typeof document === 'undefined') return;
   g.OkieMotor.defaults = Object.assign(g.OkieMotor.defaults || {}, DEFAULTS);
   g.OkieMotor.settingsRows = (g.OkieMotor.settingsRows || []).concat(SETTINGS_ROWS);
 
   // ------------------------------------------------------------- UI ----
-  var UI = g.OkieMotor.ui, h = UI.h, CT = g.OkieMotor.controls, F = g.OkieMotor.feeds;
+  var UI = g.OkieMotor.ui, h = UI.h, CT = g.OkieMotor.controls;
 
 
   core.registerStrings('en', {
@@ -161,17 +177,27 @@
       setTimeout(go, 4000);                                      // never get stuck on a slow connection
       Promise.all(urls.map(function (u) { return fetch(u, { cache: 'reload' }).catch(function () {}); })).then(go, go);
     }
-    function watch() {
-      if (!cfg().versionWatch || !g.OkieMotor.version || !g.OkieMotor.versionUrl) return;
-      fetch(g.OkieMotor.versionUrl + '?_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
-        if (!j || !j.build || !g.OkieMotor.build) return;
-        if (j.build > g.OkieMotor.build && !notice) {
-          notice = { id: 'ver:' + j.build, severity: 'info', source: 'system', title: t('n.new_version'), text: t('n.reload'), ts: Date.now(), action: hardReload };
-          recompute();
-        }
-      }, function () {});
+    // where the card was loaded from (HACS, /local, Hemma): the version file next to it, then the fixed Hemma address; when none answers, a change of the card file itself
+    function scriptUrls() { var out = []; try { performance.getEntriesByType('resource').forEach(function (r) { if (/\/okie-motor(\.min)?\.js(\?|$)/.test(r.name) && out.indexOf(r.name) < 0) out.push(r.name); }); } catch (e) { /* no resource timing */ } return out; }
+    var fileFirst = null;
+    function announce(id) { if (notice) return; notice = { id: id, severity: 'info', source: 'system', title: t('n.new_version'), text: t('n.reload'), ts: Date.now(), action: hardReload }; recompute(); }
+    function headOf(u) { return fetch(u, { method: 'HEAD', cache: 'no-store' }).then(function (r) { if (!r.ok) return null; var o = {}; ['etag', 'last-modified', 'content-length'].forEach(function (k) { var v = r.headers.get(k); if (v) o[k] = v; }); return o; }, function () { return null; }); }
+    function byFile() {
+      var u = scriptUrls()[0]; if (!u) return;
+      headOf(u).then(function (now) { if (!now) return; if (!fileFirst) { fileFirst = now; return; } if (fileChanged(fileFirst, now)) announce('ver:file:' + (now.etag || now['last-modified'] || now['content-length'])); });
     }
-    if (g.OkieMotor.versionUrl) { watch(); watchTimer = setInterval(watch, 30 * 60000); }
+    function watch() {
+      if (!cfg().versionWatch || !g.OkieMotor.version) return;
+      var urls = versionUrls(scriptUrls(), g.OkieMotor.versionUrl);
+      (function next(i) {
+        if (i >= urls.length) { byFile(); return; }
+        fetch(urls[i] + '?_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }, function () { return null; }).then(function (j) {
+          if (!j || !j.build || !g.OkieMotor.build) { next(i + 1); return; }
+          if (j.build > g.OkieMotor.build) announce('ver:' + j.build);
+        }, function () { next(i + 1); });
+      })(0);
+    }
+    watch(); watchTimer = setInterval(watch, 30 * 60000);
 
     recompute();
     return {

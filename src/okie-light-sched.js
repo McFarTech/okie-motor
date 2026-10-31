@@ -267,14 +267,14 @@
         var st = hs().states, rows = Object.keys(st).filter(function (k) { return k.indexOf('automation.') === 0 && String((st[k].attributes || {}).id || '').indexOf(PREFIX) === 0; });
         return Promise.all(rows.map(function (eid) {
           var id = st[eid].attributes.id;
-          return Promise.resolve(hs().callApi('GET', 'config/automation/config/' + id)).then(function (cfg) {
+          return new Promise(function (ok) { ok(hs().callApi('GET', 'config/automation/config/' + id)); }).then(function (cfg) {
             var p = parseAuto(Object.assign({ id: id }, cfg));
             return p ? Object.assign(p, { eid: eid, enabled: st[eid].state !== 'off', last: st[eid].attributes.last_triggered || null }) : null;
           }, function () { return null; });
         })).then(function (l) { return l.filter(Boolean); });
       },
-      save: function (cfg) { return Promise.resolve(hs().callApi('POST', 'config/automation/config/' + cfg.id, cfg)); },
-      remove: function (id) { return Promise.resolve(hs().callApi('DELETE', 'config/automation/config/' + id)); },
+      save: function (cfg) { return new Promise(function (ok) { ok(hs().callApi('POST', 'config/automation/config/' + cfg.id, cfg)); }); },
+      remove: function (id) { return new Promise(function (ok) { ok(hs().callApi('DELETE', 'config/automation/config/' + id)); }); },
       toggle: function (eid) { return ctx.call('automation', 'toggle', { entity_id: eid }); },
       /** Our automations by entity id: { automation entity id: modeId } (for the history). */
       owners: function () {

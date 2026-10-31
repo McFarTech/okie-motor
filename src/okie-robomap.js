@@ -198,7 +198,7 @@
    * opts: { pictures: [{ kind, url }] }  -> { update(X), dispose() }
    */
   function mount(ctx, box, vacId, opts) {
-    var t = function (k, v) { return core.t(k, ctx.lang(), v); }, GD = g.OkieMotor.gadgets, disposed = false, el = null, mo = null, data = null, fit = null, status = 'loading', pmap = '', pics = (opts && opts.pictures) || [];
+    var t = function (k, v) { return core.t(k, ctx.lang(), v); }, GD = g.OkieMotor.gadgets, disposed = false, el = null, mo = null, data = null, fit = null, pmap = '', pics = (opts && opts.pictures) || [];
     var layers = Object.assign({ area: true, stuck: true, rooms: true }, ctx.store.get('robomap.layers', null) || {}), loadedAt = 0, lastKey = '', loading = false, history = null, summary = null;
     var title = h('div.vc-tl.rm-tl', null, h('span', null, core.t('vc.map', ctx.lang())), h('button.rm-adj', { type: 'button', hidden: true, onclick: openAdjust }, t('rm.adjust')));
     var holder = h('div.rm-plan'), note = h('div.rm-note', { hidden: true }), cap = h('div.rm-cap'), rooms = h('div.rm-rooms'), chips = h('div.vc-jobrow.rm-layers');
@@ -222,7 +222,7 @@
       return true;
     }
     function watch() {
-      var tries = 0, sr = el && el.shadowRoot;
+      var tries = 0;
       (function wait() {
         if (disposed || !el) return; var pg = el.shadowRoot && el.shadowRoot.getElementById('pg');
         if (pg) { inject(); mo = new MutationObserver(function () { var inner = planGroup(); if (inner && !inner.querySelector('.rm-ovl')) inject(); }); mo.observe(pg, { childList: true }); return; }
@@ -273,7 +273,7 @@
       if (!force && data && key === lastKey && Date.now() - loadedAt < 600000) { drawText(); return; }
       if (!e) { status = 'nodata'; say(t('rm.nodata')); drawText(); return; }
       loading = true; if (!data) say(t('rm.loading'));
-      Promise.resolve(ctx.hass().callApi('GET', 'roomba_plus/' + e + '/missions/latest/map.json')).then(function (d) {
+      new Promise(function (ok) { ok(ctx.hass().callApi('GET', 'roomba_plus/' + e + '/missions/latest/map.json')); }).then(function (d) {
         loading = false; if (disposed) return; data = d; lastKey = key; loadedAt = Date.now(); pmap = d.pmap_id || '';
         var saved = ctx.store.get('robomap.fits', null) || {}; fit = fitFor(pmap, saved);
         if (fit) { say(''); drawText(); inject(); return; }

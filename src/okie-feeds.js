@@ -458,7 +458,7 @@
     ids = ids || api.calendarEntities(ctx);
     var q = '?start=' + encodeURIComponent(new Date(fromMs).toISOString()) + '&end=' + encodeURIComponent(new Date(toMs).toISOString());
     return Promise.all(ids.map(function (id) {
-      return Promise.resolve(ctx.hass().callApi('GET', 'calendars/' + id + q)).then(function (rows) { return (rows || []).map(function (r) { return parseEvent(r, id); }).filter(Boolean); }, function () { return []; });
+      return new Promise(function (ok) { ok(ctx.hass().callApi('GET', 'calendars/' + id + q)); }).then(function (rows) { return (rows || []).map(function (r) { return parseEvent(r, id); }).filter(Boolean); }, function () { return []; });
     })).then(function (lists) { return [].concat.apply([], lists); });
   };
 

@@ -183,7 +183,6 @@
   ].join('\n');
   g.OkieMotor.extraCss = (g.OkieMotor.extraCss || []).concat([CSS]);
 
-  function CT() { return g.OkieMotor.controls; }
 
   function render(container, ctx) {
     var t = function (k, v) { return core.t(k, ctx.lang(), v); };
@@ -207,7 +206,7 @@
     // ---- the two columns work as one: any card, in the list or in the right column, can be pulled over to the other column and dropped between its cards, or moved inside its own ----
     //   favorites stays the list of cards (its order is the order of the list). bento.rightCards / bento.rightOrder: which favorites, and with them which right-column cards (keys w:slider, w:deck, w:feeder),
     //   are in the right column and in which order. bento.leftWidgets: right-column cards that moved above the list.
-    var lw = h('div.w1-widgets'), pinNodes = {}, placedOnce = false, stacks = [], sliders = [], dAll = [], built = false;
+    var lw = h('div.w1-widgets'), pinNodes = {}, stacks = [], sliders = [], dAll = [], built = false;
     /** The right-column cards by id: slider, deck, s2 ... (the slider cards: the first, the second ...) and feeder. */
     function widgetIds() { var ids = stacks.map(function (s, i) { return L.stackKey(i).slice(2); }); if (feederCard) ids.push('feeder'); return ids; }
     function widgetEl(id) { if (id === 'feeder') return feederCard ? feederCard.el : null; var sl = sliders[L.stackIndex('w:' + id)]; return sl ? sl.el : null; }
@@ -428,7 +427,6 @@
         bindCarry(node, carrySpec(x.id, x)); holdArrange(node, carrySpec(x.id, x)); pinNodes[k] = node;
       });
       left.forEach(function (id) { var el = widgetEl(id); if (el) lw.appendChild(el); });
-      placedOnce = true;
       keys.forEach(function (k) { var el = keyEl(k); if (el) wr.appendChild(el); }); if (tiles.length) wr.appendChild(w34);
       wr.appendChild(addWidgetsBtn);      // shown while the arrangement is edited, like Add or remove favorites
       ensureOverlays(left); layoutRight(keys, true);
@@ -461,7 +459,6 @@
       });
       return out.sort(function (a, b) { return a - b; });
     }
-    function wrBox() { return wr && wr.isConnected ? wr.getBoundingClientRect() : null; }
     // ---- a card that does not fit fades out at the edge of its column instead of being cut in half. Each card gets a mask of its own (a mask on the column would take the picture away from a blurred card);
     // only the cards at an edge have one, and only while the column can still scroll that way ----
     var FADE = 60, fadeQ = 0;
@@ -592,7 +589,7 @@
      * side: the column that is pulled. Returns [{ v, kind }] in px of the column.
      */
     function snapTargets(side) {
-      var own = side === 'left' ? w1 : wr, other = side === 'left' ? wr : w1, out = [], gridH = root.offsetHeight;
+      var other = side === 'left' ? wr : w1, out = [], gridH = root.offsetHeight;
       out.push({ v: gridH, kind: 'grid' });
       if (other && other.offsetHeight > 4) out.push({ v: other.offsetHeight, kind: 'other' });
       var body = side === 'left' ? w1body : wr, head = side === 'left' ? Math.max(0, w1.offsetHeight - w1body.clientHeight) : 0;
@@ -727,7 +724,6 @@
     }
     function feeds() { return F.newsFeeds(ctx.hass().states, cfg().news_entity); }
     function readKeys() { return ctx.store.get('news.read', []); }
-    var DEFAULT_PAGES = ['weather', 'todos', 'news', 'calendar', 'tips'];
     /** Every page that can be on a card of the right column, in the order the editor lists them: [{ id, label, icon, note }]. */
     function catalog() {
       var out = [['weather', 'sun'], ['todos', 'checklist'], ['news', 'newsbook'], ['calendar', 'calendar'], ['tips', 'tips']].map(function (x) { return { id: x[0], label: t('b.' + x[0]), icon: x[1], note: pageAvailable(x[0]) ? '' : t('b.unavailable') }; });
@@ -1051,47 +1047,7 @@
      * A card with a list: every card the slider can show, in the order it shows them, each with a switch, and a handle to drag it to another place.
      * spec: { title, items: [{ id, label, icon, on, note }], minOn, onChange(idsOn in order), onReset() -> items }. Changes are kept at once.
      */
-    function openEditor(spec) {
-      var items = spec.items.slice(), RM = g.OkieMotor.rooms;
-      ctx.sheet({ title: spec.title, width: 'min(440px,100%)', content: function (close) {
-        var box = h('div'), list = h('div.pe-list');
-        function ids() { return items.map(function (x) { return x.id; }); }
-        function onIds() { return items.filter(function (x) { return x.on; }).map(function (x) { return x.id; }); }
-        function save() { spec.onChange(onIds()); }
-        function draw() {
-          list.innerHTML = '';
-          var nodes = {}, onN = onIds().length;
-          items.forEach(function (x) {
-            var sw = h('button.pe-sw' + (x.on ? '.on' : ''), { type: 'button', role: 'switch', 'aria-checked': x.on ? 'true' : 'false', 'aria-label': x.label, disabled: x.on && onN <= (spec.minOn == null ? 1 : spec.minOn), onclick: function () { x.on = !x.on; if (ctx.haptic) ctx.haptic('switch'); save(); draw(); } });
-            var grip = h('button.pe-grip', { type: 'button', 'aria-label': x.label, html: UI.icon('rows', 18) });
-            var row = h('div.pe-row' + (x.on ? '' : '.off'), { dataset: { id: x.id } }, grip, h('span.pe-ic', { html: UI.icon(x.icon || 'eye', 18) }), h('span.pe-t', null, h('b', null, x.label), x.note ? h('em', null, x.note) : null), sw);
-            nodes[x.id] = row; list.appendChild(row);
-          });
-          if (RM && RM.createSorter) {
-            var sorter = RM.createSorter(ctx, { scroller: function () { return list; }, nodes: function () { return nodes; }, order: ids, apply: function (next) { items = next.map(function (id) { return items.filter(function (x) { return x.id === id; })[0]; }); save(); draw(); } });
-            Array.prototype.forEach.call(list.children, function (row) { row.firstChild.addEventListener('pointerdown', function (e) { sorter.start(e, row.dataset.id); }); });
-          }
-        }
-        draw();
-        box.appendChild(h('div.pe-hint', null, t('b.edit_hint'))); box.appendChild(list);
-        box.appendChild(h('div.pe-foot', null, h('button', { type: 'button', onclick: function () { items = spec.onReset(); draw(); } }, t('b.reset')), h('button.done', { type: 'button', onclick: close }, t('b.done'))));
-        return box;
-      } });
-    }
     // a long press on a slider (not on a button, link or chip) opens its editor too
-    function longPressEdit(el, open) {
-      var timer = 0, sx = 0, sy = 0;
-      function clear() { clearTimeout(timer); timer = 0; }
-      el.addEventListener('pointerdown', function (e) {
-        if ((e.button || 0) !== 0 || e.target.closest('button,a,input,.chk,.row-hero,.pg-row.link,.wx-loc,.cam-pill,.hero-slide-pager')) return;
-        sx = e.clientX; sy = e.clientY; clear();
-        timer = setTimeout(function () { timer = 0; el.dataset.lp = '1'; setTimeout(function () { delete el.dataset.lp; }, 500); if (ctx.haptic) ctx.haptic('switch'); open(); }, 600);
-      });
-      el.addEventListener('pointermove', function (e) { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 8) clear(); });
-      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) { el.addEventListener(ev, clear); });
-      el.addEventListener('contextmenu', function (e) { if (timer) e.preventDefault(); });
-    }
-    var PAGE_META = { weather: 'sun', todos: 'checklist', news: 'newsbook', calendar: 'calendar', cameras: 'camera', tips: 'tips' };
     function pageAvailable(id) {
       if (id.indexOf('d:') === 0) return true;
       if (id === 'weather') return !!weatherId();
@@ -1116,7 +1072,6 @@
     }
     // Add widgets: the pages that are on no card, as a list. A tap adds one as a card of its own (merge it into another one later by dropping it there; take a page off a card with the x on it).
     function openWidgets() {
-      var RM = g.OkieMotor.rooms;
       ctx.sheet({ title: t('b.add_widgets'), width: 'min(440px,100%)', content: function (close) {
         var box = h('div'), list = h('div.wa-list');
         function draw() {
@@ -1179,7 +1134,7 @@
     var ro = null;
     if (typeof ResizeObserver === 'function') { ro = new ResizeObserver(sizeRows); ro.observe(root); }
     requestAnimationFrame(sizeRows);
-    disposers.push(ctx.settings.on('change', function (p) { if (p && p.bento && p.bento.swap !== undefined) root.dataset.swap = ((ctx.settings.get().bento || {}).swap !== false) ? 'true' : 'false'; if (p && (p.favorites || p.bento || p.rooms !== undefined || p.roomEdits !== undefined || p.roomsExtra !== undefined || p.roomsHidden !== undefined || p.roomsOrder !== undefined || p.roomNames !== undefined || p.cardStyle !== undefined)) drawW1(false); if (p && p.bento && (p.bento.w1height !== undefined || p.bento.wrheight !== undefined)) { applyHeight(); fitW1(); } if (p && p.bento && p.bento.feederDesign !== undefined && feederCard) { feederCard.update(); applyFeederHeight(); fitW1(); fadeSoon(); } }));
+    disposers.push(ctx.settings.on('change', function (p) { if (p && p.bento && p.bento.swap !== undefined) { root.dataset.swap = ((ctx.settings.get().bento || {}).swap !== false) ? 'true' : 'false'; try { drawRight(); } catch (e) { /* Cameras above the slides: the right column takes its new order at once (it used to wait for a reload) */ } } if (p && (p.favorites || p.bento || p.rooms !== undefined || p.roomEdits !== undefined || p.roomsExtra !== undefined || p.roomsHidden !== undefined || p.roomsOrder !== undefined || p.roomNames !== undefined || p.cardStyle !== undefined)) drawW1(false); if (p && p.bento && (p.bento.w1height !== undefined || p.bento.wrheight !== undefined)) { applyHeight(); fitW1(); } if (p && p.bento && p.bento.feederDesign !== undefined && feederCard) { feederCard.update(); applyFeederHeight(); fitW1(); fadeSoon(); } }));
 
     return {
       el: root,
@@ -1193,7 +1148,7 @@
       },
       show: function () { drawW1(false); sliders.forEach(function (sl) { sl.show(); }); fadeSoon(); },      // back on the start screen: the list is redrawn only when something in it changed (settings and states keep it current while it is away)
       stagger: function () { root.classList.add('stagger'); setTimeout(function () { root.classList.remove('stagger'); }, 2000); },
-      dispose: function () { sliders.forEach(function (sl) { sl.dispose(); }); timers.forEach(clearInterval); if (camCard) camCard.dispose(); if (sensCard) sensCard.dispose(); if (feederCard) feederCard.dispose(); if (ro) ro.disconnect(); disposers.forEach(function (d) { d(); }); },
+      dispose: function () { if (editBarEl && editBarEl.parentNode) editBarEl.parentNode.removeChild(editBarEl); editBarEl = null; sliders.forEach(function (sl) { sl.dispose(); });      /* the Reset / Done bar lives in the stage, outside this view: a rebuilt start screen must not leave the old one behind */ timers.forEach(clearInterval); if (camCard) camCard.dispose(); if (sensCard) sensCard.dispose(); if (feederCard) feederCard.dispose(); if (ro) ro.disconnect(); disposers.forEach(function (d) { d(); }); },
       _go: function (i) { if (sliders[0]) sliders[0].go(i); },
     };
   }

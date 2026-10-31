@@ -37,8 +37,6 @@
     't.similar': 'Steht schon auf deinen Listen', 't.list': 'Liste', 't.dictate': 'Diktieren', 't.listening': 'Hört zu…', 't.done': 'Fertig', 't.pick_date': 'Datum wählen',
   });
 
-  var COLORS = ['#4f8cff', '#2fa35c', '#f5a30b', '#e0492f', '#8e5be8', '#1fa5a5', '#e05fa8'];
-  function colorFor(id, map) { if (!map[id]) map[id] = COLORS[Object.keys(map).length % COLORS.length]; return map[id]; }
   var pad = function (n) { return (n < 10 ? '0' : '') + n; };
   var ymd = function (ms) { var d = new Date(ms); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
   var hm = function (ms) { var d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
@@ -89,7 +87,6 @@
     var VIEWS = ['day', 'week', 'month', 'year'];
     onSwipe(shell.host, function (d) { var i = VIEWS.indexOf(view) + d; if (i >= 0 && i < VIEWS.length) shell.showTab(VIEWS[i]); }, '.cal-grab,.cal-strip');      // the strip of dates scrolls with the finger (below), it does not switch the view
 
-    function step(d) { anchor = F.stepAnchor(view, anchor, d); if (view === 'month') sel = monthSel(anchor); else if (view === 'week') sel = weekSel(anchor); load(); }
     var stripView = '', stripMs = {}, stripAuto = 0, stripPick = 0, stripT = 0, stripDragAt = 0;
     function chooseMs(ms) { anchor = ms; if (view === 'month') sel = monthSel(ms); else if (view === 'week') sel = weekSel(ms); else if (view === 'day') sel = ms; }
     function highlight(act) {      // the shown period bold, the others dim; the month and the day also say their year / month beside it

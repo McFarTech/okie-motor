@@ -12,13 +12,13 @@
   'use strict';
   if (typeof document === 'undefined') return;
 
-  var UI = g.OkieMotor.ui, L = g.OkieMotor.logic, CT = g.OkieMotor.controls, DM = g.OkieMotor.domains, core = g.OkieMotor.core, S = g.OkieMotor.search;
+  var UI = g.OkieMotor.ui, L = g.OkieMotor.logic, CT = g.OkieMotor.controls, DM = g.OkieMotor.domains, core = g.OkieMotor.core;
   var h = UI.h;
 
   core.registerStrings('en', {
     'dt.controls': 'Controls', 'dt.context': 'Context', 'dt.history': 'History', 'dt.schedule': 'Schedule', 'dt.settings': 'Settings',
     'dt.related': 'Related', 'dt.same_area': 'In this room', 'dt.nothing_related': 'No scene, script or automation uses this device yet.', 'dt.nothing_related_hint': 'This tab lists the ones that do, and the scenes and scripts of its room, each with a Run button. Add one in Home Assistant that uses this device and it shows up here.', 'dt.run': 'Run', 'dt.running': 'Started',
-    'dt.edit': 'Edit this screen', 'dt.rename': 'Rename', 'dt.rename_orig': 'Original name', 'dt.rename_save': 'Save', 'dt.hero_hint': 'Drag to resize the picture', 'dt.hero_reset': 'Reset size', 'dt.done': 'Done', 'dt.icon': 'Icon', 'dt.icon_orig': 'Original icon', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Or any Home Assistant icon, like mdi:sofa', 'dt.icon_animara': 'Animara (animated)', 'dt.icon_card': 'Icons', 'dt.icon_picture': 'Or a picture (/local/... or https://...)', 'dt.icon_room_follows': 'They move with the first device of this room', 'dt.icon_animara_auto': 'Let Animara choose', 'dt.icon_animara_find': 'Find an Animara icon', 'dt.icon_more': '{n} more: type to find them',
+    'dt.edit': 'Edit this screen', 'dt.rename': 'Rename', 'dt.rename_orig': 'Original name', 'dt.rename_save': 'Save', 'dt.hero_hint': 'Drag to resize the picture', 'dt.hero_reset': 'Reset size', 'dt.done': 'Done', 'dt.icon': 'Icon', 'dt.icon_orig': 'Original icon', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Or any Home Assistant icon, like mdi:sofa', 'dt.icon_animara': 'Animara (animated)', 'dt.icon_card': 'Icons', 'dt.icon_picture': 'Or a picture (/local/... or https://...)', 'dt.icon_room_follows': 'They move with the first device of this room', 'dt.icon_follows': 'Moves with', 'dt.icon_animara_auto': 'Let Animara choose', 'dt.icon_animara_find': 'Find an Animara icon', 'dt.icon_more': '{n} more: type to find them',
     'dt.24h': '24 hours', 'dt.7d': '7 days', 'dt.30d': '30 days', 'dt.changes': 'Changes', 'dt.avg_run': 'Avg. on-time', 'dt.active': 'Active', 'dt.min': 'Min', 'dt.max': 'Max', 'dt.avg': 'Avg',
     'dt.by_hour': 'Time of day', 'dt.durations': 'Time in each state', 'dt.loading': 'Loading history…', 'dt.no_history': 'No history for this period.', 'dt.history_failed': 'Could not load history.',
     'dt.sched_none': 'No schedules for this device yet.', 'dt.sched_add': 'New schedule', 'dt.sched_time': 'Time', 'dt.sched_days': 'Days', 'dt.sched_action': 'Action', 'dt.sched_save': 'Save schedule',
@@ -32,7 +32,7 @@
   core.registerStrings('de', {
     'dt.controls': 'Steuerung', 'dt.context': 'Kontext', 'dt.history': 'Verlauf', 'dt.schedule': 'Zeitplan', 'dt.settings': 'Einstellungen',
     'dt.related': 'Zugehörig', 'dt.same_area': 'In diesem Raum', 'dt.nothing_related': 'Noch keine Szene, kein Skript und keine Automation nutzt dieses Gerät.', 'dt.nothing_related_hint': 'Dieser Tab zeigt die, die es nutzen, und die Szenen und Skripte seines Raums, jeweils mit einem Ausführen-Knopf. Lege in Home Assistant eine an, die dieses Gerät nutzt, und sie erscheint hier.', 'dt.run': 'Ausführen', 'dt.running': 'Gestartet',
-    'dt.edit': 'Diesen Bildschirm bearbeiten', 'dt.rename': 'Umbenennen', 'dt.rename_orig': 'Originalname', 'dt.rename_save': 'Speichern', 'dt.hero_hint': 'Ziehen, um das Bild zu verändern', 'dt.hero_reset': 'Größe zurücksetzen', 'dt.done': 'Fertig', 'dt.icon': 'Symbol', 'dt.icon_orig': 'Ursprüngliches Symbol', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Oder ein beliebiges Home-Assistant-Symbol, z. B. mdi:sofa', 'dt.icon_animara': 'Animara (animiert)', 'dt.icon_card': 'Symbole', 'dt.icon_picture': 'Oder ein Bild (/local/... oder https://...)', 'dt.icon_room_follows': 'Sie bewegen sich mit dem ersten Gerät dieses Raums', 'dt.icon_animara_auto': 'Animara wählen lassen', 'dt.icon_animara_find': 'Animara-Symbol suchen', 'dt.icon_more': '{n} weitere: tippe, um sie zu finden',
+    'dt.edit': 'Diesen Bildschirm bearbeiten', 'dt.rename': 'Umbenennen', 'dt.rename_orig': 'Originalname', 'dt.rename_save': 'Speichern', 'dt.hero_hint': 'Ziehen, um das Bild zu verändern', 'dt.hero_reset': 'Größe zurücksetzen', 'dt.done': 'Fertig', 'dt.icon': 'Symbol', 'dt.icon_orig': 'Ursprüngliches Symbol', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Oder ein beliebiges Home-Assistant-Symbol, z. B. mdi:sofa', 'dt.icon_animara': 'Animara (animiert)', 'dt.icon_card': 'Symbole', 'dt.icon_picture': 'Oder ein Bild (/local/... oder https://...)', 'dt.icon_room_follows': 'Sie bewegen sich mit dem ersten Gerät dieses Raums', 'dt.icon_follows': 'Bewegt sich mit', 'dt.icon_animara_auto': 'Animara wählen lassen', 'dt.icon_animara_find': 'Animara-Symbol suchen', 'dt.icon_more': '{n} weitere: tippe, um sie zu finden',
     'dt.24h': '24 Stunden', 'dt.7d': '7 Tage', 'dt.30d': '30 Tage', 'dt.changes': 'Wechsel', 'dt.avg_run': 'Ø Einschaltdauer', 'dt.active': 'Aktiv', 'dt.min': 'Min', 'dt.max': 'Max', 'dt.avg': 'Ø',
     'dt.by_hour': 'Tageszeit', 'dt.durations': 'Zeit je Zustand', 'dt.loading': 'Verlauf wird geladen…', 'dt.no_history': 'Kein Verlauf in diesem Zeitraum.', 'dt.history_failed': 'Verlauf konnte nicht geladen werden.',
     'dt.sched_none': 'Noch keine Zeitpläne für dieses Gerät.', 'dt.sched_add': 'Neuer Zeitplan', 'dt.sched_time': 'Uhrzeit', 'dt.sched_days': 'Tage', 'dt.sched_action': 'Aktion', 'dt.sched_save': 'Zeitplan speichern',
@@ -57,7 +57,7 @@
     if (hit && now - hit.t < 60000) return hit.p;
     var to = now, from = now - L.RANGES[range];
     var path = 'history/period/' + new Date(from).toISOString() + '?filter_entity_id=' + encodeURIComponent(id) + '&end_time=' + encodeURIComponent(new Date(to).toISOString()) + '&minimal_response&no_attributes';
-    var p = Promise.resolve(ctx.hass().callApi('GET', path)).then(function (res) { return { rows: (res && res[0]) || [], from: from, to: to }; });
+    var p = new Promise(function (ok) { ok(ctx.hass().callApi('GET', path)); }).then(function (res) { return { rows: (res && res[0]) || [], from: from, to: to }; });
     histCache.set(key, { t: now, p: p });
     p.catch(function () { histCache.delete(key); });
     return p;
@@ -69,7 +69,6 @@
     warmVideo(ctx, id);
   }
 
-  var NS = 'http://www.w3.org/2000/svg';
   function fmtTime(ts, range, lang) {
     var d = new Date(ts);
     if (range === '24h') return d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
@@ -552,7 +551,12 @@
       };
       var at = 0; aq.addEventListener('input', function () { clearTimeout(at); at = setTimeout(drawA, 150); });
       box.appendChild(label('dt.icon_animara'));
-      if (o.entityNote) box.appendChild(hint(o.entityNote));
+      if (o.entities && o.entities.length > 1) {      // a room: which of its devices the icon moves with; the previews follow the choice
+        var follow = h('select.rm-q', { 'aria-label': t('dt.icon_follows'), style: { appearance: 'auto', marginBottom: '10px' } });
+        o.entities.forEach(function (x) { var op = h('option', { value: x.id }, x.name); if (x.id === o.entity) op.selected = true; follow.appendChild(op); });
+        follow.addEventListener('change', function () { o.entity = follow.value; if (o.onEntity) o.onEntity(follow.value); drawA(); });
+        box.appendChild(hint('dt.icon_follows')); box.appendChild(follow);
+      } else if (o.entityNote) box.appendChild(hint(o.entityNote));
       if (list.length > first) box.appendChild(aq);
       box.appendChild(agrid); box.appendChild(amore); drawA();
     }

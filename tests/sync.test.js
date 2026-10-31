@@ -45,3 +45,14 @@ test('import refuses anything that is not our file', () => {
 test('the file name carries the date', () => {
   assert.equal(Y.fileName(new Date(2026, 9, 5)), 'okie-motor-settings-2026-10-05.json');
 });
+
+test('a licence key never goes into an exported file, and an import keeps the one you have', () => {
+  const S2 = require('../src/okie-sync.js');
+  const out = S2.buildExport({ animaraKey: 'SECRET-123', favorites: ['light.a'] }, { version: '1', now: 0 });
+  assert.equal(out.settings.animaraKey, undefined);
+  assert.deepEqual(out.settings.favorites, ['light.a']);
+  assert.ok(!JSON.stringify(out).includes('SECRET-123'));
+  assert.equal(S2.withPrivate({ favorites: [] }, { animaraKey: 'MINE' }).animaraKey, 'MINE', 'importing a file does not lose your key');
+  assert.equal(S2.withPrivate({ animaraKey: 'FILE' }, { animaraKey: 'MINE' }).animaraKey, 'FILE', 'an old file that carries a key still sets it');
+  assert.equal(S2.withPrivate({}, {}).animaraKey, undefined);
+});

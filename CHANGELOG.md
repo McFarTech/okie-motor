@@ -2,6 +2,19 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.308 (2026-10-31)
+
+**Safer, tidier, and the update notice works with HACS.**
+- Exported settings files no longer contain your Animara licence key, and importing a file keeps the key you have. The key box hides what you type
+- Short device names (Settings > Appearance): when Home Assistant joins a device and its entity (Living Room TV Television) the card shows the device name (Living Room TV). A name you gave a device still wins
+- A room's Animara icon can follow any device of the room: pencil > Icon > Moves with
+- The new-version notice now works for HACS and hand installs: it looks next to the card file, and notices when the file changes
+- Cameras above the slides takes effect at once instead of after a reload
+- Changing an icon or a setting while arranging no longer leaves an extra Reset / Done bar behind
+- A Home Assistant request that fails straight away (calendar, history, robot map, server, light schedules) no longer leaves an error behind
+- Animara names are cleaned before they reach the page; unused code removed
+- The browser checks (harness/smoke.js) are brought up to date with the current screens; the bundle page loads the robot map sample like the source page
+
 ## 0.55.307 (2026-10-31)
 
 **One way to choose an icon, everywhere.**

@@ -63,7 +63,7 @@
   if (typeof document === 'undefined') return;
 
   // ------------------------------------------------------------- UI ----
-  var UI = g.OkieMotor.ui, L = g.OkieMotor.logic, core = g.OkieMotor.core, h = UI.h;
+  var UI = g.OkieMotor.ui, core = g.OkieMotor.core, h = UI.h;
   core.registerStrings('en', { 'zen.open': 'Open the start screen', 'zen.swipe': 'Swipe up', 'zen.voice': 'Ask the assistant', 'zen.listening': 'Listening...', 'zen.done': 'Done', 'zen.failed': 'That did not work' });
   core.registerStrings('de', { 'zen.open': 'Startbildschirm öffnen', 'zen.swipe': 'Nach oben wischen', 'zen.voice': 'Den Assistenten fragen', 'zen.listening': 'Ich höre zu...', 'zen.done': 'Erledigt', 'zen.failed': 'Das hat nicht geklappt' });
 

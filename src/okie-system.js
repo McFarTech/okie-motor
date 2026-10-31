@@ -81,6 +81,7 @@
 
   // ------------------------------------------------------- changelog ----
   var CHANGELOG = [
+    { v: '0.55.308', date: '2026-10-31', tags: ['fix', 'new'], md: '**Safer, tidier, and the update notice works with HACS.**\n- Exported settings files no longer contain your Animara licence key, and importing a file keeps the key you have. The key box hides what you type\n- Short device names (Settings > Appearance): when Home Assistant joins a device and its entity (Living Room TV Television) the card shows the device name (Living Room TV). A name you gave a device still wins\n- A room\'s Animara icon can follow any device of the room: pencil > Icon > Moves with\n- The new-version notice now works for HACS and hand installs: it looks next to the card file, and notices when the file changes\n- Cameras above the slides takes effect at once instead of after a reload\n- A Home Assistant request that fails straight away (calendar, history, robot map, server, light schedules) no longer leaves an error behind\n- Animara names are cleaned before they reach the page; unused code removed' },
     { v: '0.55.307', date: '2026-10-31', tags: ['layout', 'new'], md: '**One way to choose an icon, everywhere.**\n- A device, the Music screen and a room all work the same: tap the pencil, then Icon. The same sheet opens: Animara\'s animated icons, the card\'s icons, any Home Assistant icon, and Original icon\n- Rooms can have an Animara icon too: it moves with the first device of the room. A room\'s picture is now in the same sheet\n- The Music screen has the pencil of a device screen instead of the star' },
     { v: '0.55.306', date: '2026-10-30', tags: ['fix'], md: '**No cover? Your icon instead.**\n- The players in a room (the big cover card, the speaker row and the TV card) and the cover square of the Music screen show the icon you chose for the player when there is no cover or it does not load, an Animara one moving with the music\n- Room cards try every way to load a cover too (each picture by this page\'s path and by Home Assistant\'s address)' },
     { v: '0.55.305', date: '2026-10-30', tags: ['fix'], md: '**The Music cover tries every way to load.**\n- Each picture of the player is tried by this page\'s own address and by Home Assistant\'s address, so a cover no longer goes missing when the two differ (http and https, inside and outside your home). The colour of the screen follows the cover that loaded' },
@@ -488,10 +489,9 @@
 
   function renderAssistant(container, ctx) {
     var t = function (k, v) { return core.t(k, ctx.lang(), v); };
-    var history = assistant.history(ctx), busy = false;
+    var busy = false;
     var input = h('input.s-text', { type: 'text', placeholder: t('y.say'), 'aria-label': t('y.say'), autocomplete: 'off', onkeydown: function (e) { if (e.key === 'Enter') send(); } });
     var sendBtn = h('button.act.primary', { onclick: send }, t('y.send'));
-    var clearBtn = h('button.dt-circ', { 'aria-label': t('y.clear'), title: t('y.clear'), onclick: function () { history = []; assistant.clear(ctx); draw(); }, html: UI.icon('trash', 18) });
     var shell = shellFor(container, ctx, 'assistant', 'spark', ['#1d2a4d', '#7a4bb3'], { header: h('div.chat-in', null, input, sendBtn), actions: [{ icon: 'trash', label: t('y.clear'), onClick: function () { history = []; assistant.clear(ctx); draw(); } }] });
     var body = shell.body;
     (function () { var hs = ctx.hass(), id = pickAgent(hs && hs.states, (ctx.settings.get().assistant || {}).agent), st = id && hs && hs.states[id]; shell.setSubtitle((st && st.attributes && st.attributes.friendly_name) || (id ? id.split('.')[1] : 'Assist')); })();

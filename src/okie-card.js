@@ -32,7 +32,7 @@
     topCategory: 'devices', chip: 'all', layout: 'grid',
     squircle: 'none',
     quickEnabled: true, quickControl: L.DEFAULT_QUICK,
-    favorites: [], detailHero: 0, deviceNames: {}, deviceIcons: {}, haIcons: true, animaraKey: '', rooms: [], roomOrder: {}, roomsOrder: [], roomEdits: {}, cardStyle: {}, roomsExtra: [], roomsHidden: [], roomNames: {}, learning: 'normal',
+    favorites: [], detailHero: 0, deviceNames: {}, deviceIcons: {}, haIcons: true, animaraKey: '', tidyNames: true, rooms: [], roomOrder: {}, roomsOrder: [], roomEdits: {}, cardStyle: {}, roomsExtra: [], roomsHidden: [], roomNames: {}, learning: 'normal',
     visibility: { hidden: false, disabled: false, diagnostic: false },
     excluded: ['switch.schedule_*'],     // the Scheduler component's helper switches belong to the Schedules app, not the device list
     limits: { max: 0, areaOnly: true, hideUnavailable: true },
@@ -83,7 +83,7 @@
   });
 
   var feelOf = function (css) { var P = !isNode && g.OkieMotor.polish; return P && P.feel ? P.feel(css) : css; };      // hover only where a pointer hovers, strong ease-out (okie-polish)
-  var SPRING = 'cubic-bezier(.34,1.18,.24,1)', PANEL_EASE = 'cubic-bezier(.32,.72,0,1)';
+  var PANEL_EASE = 'cubic-bezier(.32,.72,0,1)';
 
   var CARD_CSS = [
     ':host{display:block;position:relative;}',
@@ -652,7 +652,7 @@
       if (p && p.bento && p.bento.oneWidget !== undefined) { this._settings.set({ bento: { stacks: null, rightOrder: null, leftWidgets: [] } }); this._rebuildStart(); }      // one swipeable card or separate ones: the start screen is built again
       if (p && p.language !== undefined) { this._engine.setLang(this._lang()); this._renderDock(); if (this._search) this._search.refreshLabels(); }
       if (p && p.learning) this._engine.setSpeed(p.learning);
-      if (p && (p.visibility || p.excluded || p.limits)) this._rebuildCollection(true);
+      if (p && (p.visibility || p.excluded || p.limits || p.tidyNames !== undefined)) this._rebuildCollection(true);
       if (p && p.search && this._search) this._search.applySettings();
       if (p && (p.quickControl || p.quickEnabled !== undefined || p.layout || p.search)) { if (this._search) this._search.rerun(); }
       if (p && p.sidebar) this._renderDock();
@@ -674,7 +674,7 @@
       var same = this._regRefs && refs.every((r, i) => r === this._regRefs[i]);
       if (!force && same && sig === this._regSig) return false;
       this._regSig = sig; this._regRefs = refs;
-      var items = S.buildCollection(hs, { includeHidden: s.visibility.hidden, includeDisabled: s.visibility.disabled, includeDiagnostic: s.visibility.diagnostic });
+      var items = S.buildCollection(hs, { includeHidden: s.visibility.hidden, includeDisabled: s.visibility.disabled, includeDiagnostic: s.visibility.diagnostic, tidyNames: s.tidyNames !== false });
       items = items.filter(function (i) { var st = hs.states[i.id]; return !(st && st.attributes && Array.isArray(st.attributes.entries)); });   // news feed sensors belong to the News app
       if (g.OkieMotor.gadgets) items = g.OkieMotor.gadgets.apply(items, hs.states, hs.areas);      // the Kindle and the AWTRIX: one tile each instead of dozens of entities
       if (s.limits && s.limits.max > 0) items = items.slice(0, s.limits.max);
@@ -696,7 +696,9 @@
             if (it) {
               var patch = { state: cur[id].state };
               var fn = cur[id].attributes && cur[id].attributes.friendly_name; if (fn && L.decodeEntities) fn = L.decodeEntities(fn);      // (a name like 50&quot; TV is stored decoded; the raw one would put the entity back into the text)
-              var own = (this._settings.get().deviceNames || {})[id]; if (own) fn = own; if (fn && fn !== it.name) patch.name = fn;
+              var s0 = this._settings.get(), own = (s0.deviceNames || {})[id];
+              if (own) fn = own; else if (fn && s0.tidyNames !== false && it.devName) fn = S.tidyName(fn, it.devName, it.onlyOfKind);      // the short name stays short
+              if (fn && fn !== it.name) patch.name = fn;
               this._engine.patch(id, patch);
             }
             changed.push({ id: id, old: prev[id] || null, next: cur[id] });
@@ -757,7 +759,7 @@
 
     // ---------------------------------------------------------- dock ----
     _dockItems() {
-      var A = g.OkieMotor.apps, DK = g.OkieMotor.dock, self = this, hs = this._hass;
+      var A = g.OkieMotor.apps, DK = g.OkieMotor.dock, self = this;
       var avail = ['home'];
       DK.DEFAULT_ORDER.forEach(function (id) {
         if (id === 'home') return;

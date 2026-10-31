@@ -243,7 +243,7 @@
     function reloadSoon(ms) { clearTimeout(reloadT); reloadT = setTimeout(load, ms || 450); }
 
     function chipsOf(e) {
-      var u = unit().replace('°', '°'), c = function (cls, txt) { return h('span.ts-chip.' + cls, null, txt); };
+      var c = function (cls, txt) { return h('span.ts-chip.' + cls, null, txt); };
       if (e.mode === 'heat_cool') return [c('heat', fmtN(e.low) + '°'), c('cool', fmtN(e.high) + '°')];
       if (e.mode === 'heat') return [c('heat', fmtN(e.temp) + '°')];
       if (e.mode === 'cool') return [c('cool', fmtN(e.temp) + '°')];
@@ -256,7 +256,7 @@
     // ---------------------------------------------------------- the list ----
     function drawList() {
       wrap.innerHTML = '';
-      var all = entries(), today = todayKey();
+      var all = entries();
       var tabs = h('div.ts-days', { role: 'tablist' });
       DAYS.forEach(function (d) {
         var n = onDay(all, d).length;
@@ -328,14 +328,14 @@
       S.view = 'edit'; drawEdit();
     }
     function editEntry(e) {
-      var L = limits(), seed = seedFrom(e.name);
+      var seed = seedFrom(e.name);
       S.E = { isNew: false, e: e, name: e.name, time: e.time, days: e.days.slice(), mode: e.mode, low: e.low != null ? e.low : seed.low, high: e.high != null ? e.high : seed.high, temp: e.temp != null ? e.temp : seed.temp,
         preset: e.preset || seed.preset, touched: true };
       S.view = 'edit'; drawEdit();
     }
     function back() { S.view = 'list'; S.E = null; draw(); }
     function drawEdit() {
-      var E = S.E, L = limits(), lab = labels(), prof = profiles(); wrap.innerHTML = '';
+      var E = S.E, L = limits(), lab = labels(); wrap.innerHTML = '';
       wrap.appendChild(h('div.ts-eh', null, h('button.ts-back', { type: 'button', onclick: back, html: UI.icon('chevleft', 18) + '<span>' + t('ts.back') + '</span>' }), h('div.ts-et', null, E.isNew ? t('ts.new') : t('ts.edit'))));
 
       // name: the four profiles as chips, or anything you type
@@ -393,7 +393,7 @@
       if (!E.isNew) wrap.appendChild(h('button.act.danger.ts-del', { type: 'button', onclick: function () { doDelete(); } }, t('ts.delete')));
     }
     function doSave() {
-      var E = S.E, L = limits();
+      var E = S.E;
       var name = String(E.name || '').trim() || (E.mode === 'off' ? t('ts.m.off') : t('ts.p.comfort'));
       if (!E.days.length) { ctx.toast('error', t('ts.day_empty')); return; }
       var entry = { mode: E.mode, temp: E.temp, low: E.low, high: E.high, preset: E.preset };

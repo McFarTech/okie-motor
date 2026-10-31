@@ -432,7 +432,6 @@
       values.style.display = locked ? 'none' : '';
     }
     function paintStack(c) {
-      var inner = '';
       var any = LEVEL_ORDER.filter(function (k) { return c[k]; });
       mstapel.innerHTML = '';
       if (!any.length) mstapel.appendChild(h('i.island-mstufe.island-mstufe--leer', { html: ICON.bell(17) }));
@@ -520,7 +519,7 @@
     // ---- the list below the head ----
     function drawList() {
       shellInner.innerHTML = '';
-      var c = counts(), box;
+      var box;
       if (listKind === 'geraete') {
         var acts = live(), tabs = liveTabs(acts, lang());
         if (!tabs.some(function (x) { return x.key === liveTab; })) liveTab = 'all';
@@ -566,7 +565,7 @@
       paintValues(); paintStack(c); paintStepper(c); paintMeldColumn(c); paintLive(c); paintTone();
       var b = badgeLevel(c), n = badgeCount(c);
       eck.hidden = !n; eck.textContent = String(n); eck.className = 'island-eck ' + (b === 'critical' ? 'island-eck--rot' : (b === 'warning' ? 'island-eck--amber' : 'island-eck--blau'));
-      var tintOnly = pill.dataset.thema; layout();
+       layout();
     }
     function update() {
       withMemo(function () { var acts = live(); checkAlerts(); checkDone(acts); paintAll(); if (expanded()) drawList(); });

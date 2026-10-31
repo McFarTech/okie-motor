@@ -14,7 +14,7 @@
   var isNode = typeof module !== 'undefined' && module.exports;
   var TS = isNode ? require('./okie-thermo-sched.js') : (g.OkieMotor && g.OkieMotor.thermoSchedule);
   if (!TS) return;
-  var DAYS = TS.DAYS, WEEKDAYS = TS.WEEKDAYS, WEEKEND = TS.WEEKEND, expandDays = TS.expandDays, clockOf = TS.clockOf, cleanSlot = TS.cleanSlot, onDay = TS.onDay;
+  var expandDays = TS.expandDays, clockOf = TS.clockOf, cleanSlot = TS.cleanSlot;
 
   var ICONS = ['flame', 'moon', 'sun', 'bulb', 'star', 'heart', 'spark', 'tv', 'home', 'bolt'];
   var COLORS = [['#ff8a5c', '#c8423f'], ['#7c7cff', '#2f2f8f'], ['#f5a30b', '#b4560a'], ['#3fb8b4', '#17696a'], ['#ff7ab8', '#a82a72'], ['#5bc27a', '#1f6b3b']];
@@ -187,7 +187,6 @@
   /** 'horizontal' (side by side), 'vertical' (stacked) or 'compact' (a thin strip of pictures only). */
   function layoutOf(ctx) { var v = ctx.settings.get().lightModesLayout; return v === 'vertical' || v === 'compact' ? v : 'horizontal'; }
   function areasOf(ctx) { var hs = ctx.hass(); return (hs && hs.areas) || null; }
-  function dayName(ctx, d) { return core.t('dt.' + d, ctx.lang()); }
 
   /** Run a mode: its calls one after the other. */
   function run(ctx, mode, el) {
@@ -342,7 +341,7 @@
       // schedule
       var sbox = h('div.lme-sched'); body.appendChild(sbox); sbox.appendChild(h('div.lbl', null, t('lm.sched')));
       if (E.isNew) sbox.appendChild(h('div.ts-hint', null, core.t('ls.save_first', ctx.lang())));
-      else if (g.OkieMotor.lightSched) { var sh = h('div.lme-schedbody'); sbox.appendChild(sh); schedInst = g.OkieMotor.lightSched.schedulePage(ctx, sh, { mode: E.orig.id }); }
+      else if (g.OkieMotor.lightSched) { var shBody = h('div.lme-schedbody'); sbox.appendChild(shBody); schedInst = g.OkieMotor.lightSched.schedulePage(ctx, shBody, { mode: E.orig.id }); }
       // buttons
       var row = h('div.vs-actions');
       row.appendChild(h('button.act.primary.lme-save', { type: 'button', onclick: save }, t('lm.save')));
@@ -353,7 +352,7 @@
     }
     /** The three ways to add a step: a script or scene, some lights, all the lights of a room. */
     function addPanel() {
-      var box = h('div.lme-add'), kind = ['script', 'lights', 'area'], cur = view.addKind || 'script';
+      var box = h('div.lme-add'), cur = view.addKind || 'script';
       var tabs = h('div.chiprow.lme-kinds');
       [['script', 'lm.add_script'], ['lights', 'lm.add_lights'], ['area', 'lm.add_room']].forEach(function (k) { tabs.appendChild(h('button.cp' + (cur === k[0] ? '.on' : ''), { type: 'button', dataset: { kind: k[0] }, 'aria-pressed': cur === k[0] ? 'true' : 'false', onclick: function () { view.addKind = k[0]; drawEdit(); } }, t(k[1]))); });
       box.appendChild(tabs);

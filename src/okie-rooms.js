@@ -412,7 +412,7 @@
     var next = h('button.rc-tr.nx', { type: 'button', 'aria-label': 'Next', html: CV_PREV, onclick: function (e) { e.stopPropagation(); ctx.call('media_player', 'media_next_track', { entity_id: item.id }).catch(function () {}); } });
     var el = h('div.rc.rc-media.rc-cover', null, art, h('div.cv-main', null, h('div.cv-head', null, cap, logo), h('div', null, npT, npS), bar, h('div.cv-ctl', null, tl, h('div.cv-btns', null, pw, prev, play, next), tr)));
     openIt(ctx, el, item);
-    var attrs = {}, playing = false, picture = '';
+    var attrs = {}, playing = false;
     bar.addEventListener('click', function (e) {
       e.stopPropagation();
       var d = +attrs.media_duration; if (!(d > 0) || !((attrs.supported_features || 0) & 2)) return;
@@ -792,7 +792,6 @@
     var list = null, rich = [], nodes = {}, order = [];
 
     function saveOrder() { var o = {}; o[room.id] = order.slice(); ctx.settings.set({ roomOrder: o }); }       // kept per room
-    function syncOrderFromDom() { order = Array.prototype.filter.call(list.children, function (n) { return n.classList.contains('rm-item'); }).map(function (n) { return n.dataset.id; }); }
     function put() { order.forEach(function (x) { list.insertBefore(nodes[x], addBtn); }); }
     function take(id) { var cur = (ctx.settings.get().roomEdits || {})[room.id], o = {}; o[room.id] = toggleDevice(room.base, cur, id); ctx.settings.set({ roomEdits: o }); build(); }
 
@@ -857,7 +856,11 @@
       setTimeout(function () { try { input.focus(); input.select(); } catch (e) { /* no focus */ } }, 60);
     }
     /** The room's own icon (one of the card's, or any Home Assistant icon) or a picture behind it. */
-    function roomEntity() { var it = roomItems(ctx, room)[0]; return it ? it.id : ''; }      // the device an Animara icon of the room moves with
+    function roomEntity() {      // the device an Animara icon of the room moves with: the one you chose (pencil > Icon > Moves with), else the first
+      var items = roomItems(ctx, room), own = (ctx.settings.get().roomIconEntity || {})[room.id];
+      if (own && items.some(function (x) { return x.id === own; })) return own;
+      return items[0] ? items[0].id : '';
+    }
     function heroIcon() { var ic = room.icon && UI.isAnimara(room.icon) ? room.icon : roomIcon(room), ent = UI.isAnimara(ic) ? roomEntity() : ''; return ent && UI.animaraAvailable() ? UI.animaraSlot(ent, ic.slice(8), 170) : UI.icon(UI.isAnimara(ic) ? roomIcon({ name: room.name }) : ic, 170); }
     function applyLook() {
       room = roomsNow(ctx).filter(function (r) { return r.id === roomId; })[0] || room;
@@ -871,6 +874,8 @@
       var s0 = ctx.settings.get(), own = (s0.roomIcons || {})[room.id] || '', ownPh = (s0.roomPhotos || {})[room.id] || '', DT = g.OkieMotor.detail;
       if (!DT || !DT.openIconSheet) return;
       DT.openIconSheet(ctx, { current: own, entity: roomEntity(), entityNote: 'dt.icon_room_follows', auto: false, hasMore: !!ownPh,
+        entities: roomItems(ctx, room).map(function (x) { return { id: x.id, name: L.shortName(x.name, x.area) }; }),
+        onEntity: function (id) { var o = {}; o[room.id] = id; ctx.settings.set({ roomIconEntity: o }); applyLook(); },
         save: function (v) { var o1 = {}; o1[room.id] = v; var p = { roomIcons: o1 }; if (!v) { var o2 = {}; o2[room.id] = ''; p.roomPhotos = o2; } ctx.settings.set(p); applyLook(); },
         extra: function (box, close) {
           var pi = h('input.rm-q', { type: 'text', value: ownPh, placeholder: '/local/rooms/' + (room.baseName || room.name || 'room').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.jpg', 'aria-label': t('dt.icon_picture'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
@@ -973,7 +978,7 @@
   // ------------------------------------------------ across devices ----
   // What you arrange here (rooms, their devices and order, the card types) is kept in Home Assistant's own storage for your user, so the phone, the iPad and the
   // wall tablet show the same thing. Newest change wins; a device pulls on start, when it comes back to the foreground and every five minutes.
-  var SYNC_KEY = 'okie_motor_rooms', SYNC_FIELDS = ['rooms', 'roomEdits', 'roomOrder', 'roomsOrder', 'cardStyle', 'roomsExtra', 'roomsHidden', 'roomNames', 'roomIcons', 'roomPhotos'];
+  var SYNC_KEY = 'okie_motor_rooms', SYNC_FIELDS = ['rooms', 'roomEdits', 'roomOrder', 'roomsOrder', 'cardStyle', 'roomsExtra', 'roomsHidden', 'roomNames', 'roomIcons', 'roomPhotos', 'roomIconEntity'];
   function snapshot(ctx) { var s = ctx.settings.get(), o = {}; SYNC_FIELDS.forEach(function (k) { o[k] = s[k]; }); return o; }
   function hasData(snap) { return SYNC_FIELDS.some(function (k) { var v = snap[k]; return Array.isArray(v) ? v.length > 0 : (v && typeof v === 'object' ? Object.keys(v).length > 0 : !!v); }); }
   var applying = false;
@@ -1011,6 +1016,6 @@
   api.gripButton = gripButton; api.sideButton = sideButton;
   api.styleOf = styleOf; api.listCard = listCard; api.richCard = richCard; api.addButton = addButton;
   api.createSorter = createSorter; api.endDrag = function () { if (activeSort) activeSort(true); }; api.tileOrder = tileOrder; api.rooms = roomsNow; api.renderCards = renderCards; api.signature = signature; api.roomItems = roomItems; api.renderRoom = renderRoom;
-  g.OkieMotor.defaults = Object.assign(g.OkieMotor.defaults || {}, { rooms: [], roomOrder: {}, roomsOrder: [], roomEdits: {}, cardStyle: {}, roomsExtra: [], roomsHidden: [], roomNames: {}, roomIcons: {}, roomPhotos: {} });
+  g.OkieMotor.defaults = Object.assign(g.OkieMotor.defaults || {}, { rooms: [], roomOrder: {}, roomsOrder: [], roomEdits: {}, cardStyle: {}, roomsExtra: [], roomsHidden: [], roomNames: {}, roomIcons: {}, roomPhotos: {}, roomIconEntity: {} });
   g.OkieMotor.rooms = api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

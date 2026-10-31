@@ -155,7 +155,7 @@
     root.addEventListener('pointerup', function (e) {
       clearTimeout(holdT);
       if (!press || e.pointerId !== press.id) return;
-      var wasHeld = held, p = press; press = null; held = false;
+      var wasHeld = held; press = null; held = false;
       if (!wasHeld) return;                                                        // a quick tap: the click that follows goes into the app
       var i = indexAt(e.clientX, e.clientY); if (i < 0) i = -1; light(-1);
       var st = releaseStep({ index: i }); touchedAt = Date.now(); setOpen(true, st.fold);

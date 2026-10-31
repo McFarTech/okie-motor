@@ -206,7 +206,7 @@
 
   function binaryControl(ctx, item, o) {
     var t = T(ctx), lang = ctx.lang(), st0 = ctx.state(item.id) || { state: item.state, attributes: {} };
-    var kind = kindOf(st0.attributes.device_class || item.deviceClass, item.name), contact = kind === 'door' || kind === 'window';
+    var kind = kindOf(st0.attributes.device_class || item.deviceClass, item.name);
     var nameEl = h('div.sn-name', null, item.name), roomEl = h('div.sn-room', null, item.area || '');
     var dot = h('i.sn-dot'), word = h('div.sn-word'), upd = h('div.sn-upd');
     var illus = h('div.sn-art', { html: sensorArtSvg(kind) || UI.icon(KIND_ICON[kind] || 'pulse', 72) });

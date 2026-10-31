@@ -69,3 +69,21 @@ test('quiet hours silence info toasts but never errors or warnings', () => {
   assert.equal(N.toastAllowed('warning', true), true);
   assert.equal(N.toastAllowed('info', false), true);
 });
+
+test('the update check looks next to the card wherever it was installed, then at Hemma', () => {
+  const N2 = require('../src/okie-notify.js');
+  assert.deepEqual(N2.versionUrls(['https://ha.example/hacsfiles/okie-motor/okie-motor.js?hacstag=12345'], '/hemma_scripts/okie-version.json'),
+    ['https://ha.example/hacsfiles/okie-motor/okie-version.json', '/hemma_scripts/okie-version.json'], 'HACS first, Hemma after');
+  assert.deepEqual(N2.versionUrls(['http://x/local/okie-motor.js?v=0.52.7'], ''), ['http://x/local/okie-version.json'], 'installed by hand');
+  assert.deepEqual(N2.versionUrls([], '/hemma_scripts/okie-version.json'), ['/hemma_scripts/okie-version.json'], 'nothing found: Hemma only');
+  assert.deepEqual(N2.versionUrls(['http://x/local/other.js'], null), [], 'other scripts are not the card');
+});
+
+test('a changed card file is noticed by its ETag, date or size, not by a missing header', () => {
+  const N2 = require('../src/okie-notify.js');
+  assert.equal(N2.fileChanged({ etag: '"a"' }, { etag: '"b"' }), true);
+  assert.equal(N2.fileChanged({ 'last-modified': 'Mon' }, { 'last-modified': 'Tue' }), true);
+  assert.equal(N2.fileChanged({ etag: '"a"', 'content-length': '10' }, { etag: '"a"', 'content-length': '10' }), false);
+  assert.equal(N2.fileChanged({ etag: '"a"' }, {}), false, 'a header that went missing is not a new version');
+  assert.equal(N2.fileChanged(null, { etag: '"a"' }), false);
+});

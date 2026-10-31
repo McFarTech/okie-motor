@@ -200,7 +200,7 @@
   });
 
   function renderMusic(container, ctx) {
-    var t = function (k, v) { return core.t(k, ctx.lang(), v); }, disposed = false, lyricsOn = false, playerId = pickPlayer(ctx.hass().states, ctx.store.get('music.player', null)), lastTrack = '', lyr = null, lyrKey = '', lyrToken = 0, activeLine = -2, tint = null, tintFor = '', dragging = false, bars = [], lf = null, np = null;
+    var t = function (k, v) { return core.t(k, ctx.lang(), v); }, disposed = false, lyricsOn = false, playerId = pickPlayer(ctx.hass().states, ctx.store.get('music.player', null)), lastTrack = '', lyr = null, lyrKey = '', lyrToken = 0, activeLine = -2, tintFor = '', dragging = false, bars = [], lf = null, np = null;
     var shell = g.OkieMotor.appshell.create(container, ctx, { id: 'music', title: t('app.music'), subtitle: '', icon: 'music', gradient: ['#0f2a22', '#1db954'], slim: true, tabs: [], heroDomain: 'media_player', onTab: function () {}, actions: [{ icon: 'heart', label: t('dt.fav_add'), onClick: function () { if (!playerId) { ctx.toast('error', t('mu.nothing')); return; } ctx.favorites.toggle(playerId); paintHeart(); } }] });
     var heart = shell.el.querySelector('.dt-acts .dt-circ');
     // the big picture on the left: the icon you chose for this player (an Animara one moves with it), else the note
@@ -292,7 +292,6 @@
     root.appendChild(player); root.appendChild(setup); body.appendChild(root);
     var roSize = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(function () { requestAnimationFrame(sizeStage); }) : null; if (roSize) roSize.observe(root); requestAnimationFrame(sizeStage);
 
-    var np = null;
     function setupView() {
       setup.innerHTML = '';
       setup.appendChild(h('div.mu-si', { html: UI.icon('music', 54) }));

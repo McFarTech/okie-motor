@@ -156,7 +156,7 @@
   };
 
   function icon(name, size, extra) {
-    if (!ICONS[name] && isMdi(name)) { var m = mdiIcon(name, size); if (m) return m; }      // a Home Assistant icon you chose (mdi:sofa)
+    if (!ICONS[name] && isMdi(name) && !isAnimara(name)) { var m = mdiIcon(name, size); if (m) return m; }      // a Home Assistant icon you chose (mdi:sofa); an Animara name is never one
     var inner = ICONS[name] || ICONS.eye;
     var s = size || 24;
     return '<svg class="oi' + (extra ? ' ' + extra : '') + '" width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
@@ -215,7 +215,7 @@
   var ICON_CHOICES = ['bulb', 'plug', 'toggle', 'power', 'tv', 'speaker', 'music', 'film', 'cast', 'tablet', 'camera', 'doorbell', 'bell', 'lock', 'key', 'door', 'window', 'garage', 'blinds', 'thermostat', 'snowflake', 'flame', 'fan', 'drop', 'wind', 'vacuum', 'bolt', 'battery', 'sun', 'moon', 'home', 'homeroom', 'heart', 'star', 'shield', 'person', 'motion', 'eye', 'gauge', 'clock', 'book', 'spark'];
   /** A picture you can put behind a room: a path of Home Assistant (/local/...) or an https address, nothing that could break out of url("..."). */
   function isPhotoUrl(u) { return typeof u === 'string' && /^(\/|https:\/\/)[^"'()\s<>\\]+$/.test(u.trim()); }
-  function isMdi(name) { return typeof name === 'string' && MDI_RE.test(name) && name.indexOf(':') > 0; }
+  function isMdi(name) { return typeof name === 'string' && MDI_RE.test(name) && !/^animara:/.test(name); }      // Animara's names look alike but only Animara can draw them
   /** Which icon you chose for an entity, '' for none. Pure, tested.
    *  own: the icon set on the device screen (settings.deviceIcons[id]) — wins;
    *  haIcon: the icon set for the entity in Home Assistant (entity registry), used when useHa is on. */
@@ -249,12 +249,12 @@
   function animaraIcons() {
     var E = typeof window !== 'undefined' && window.AnimaraEngine, out = [];
     if (!E || !E.icons) return out;
-    Object.keys(E.icons).forEach(function (k) { var v = E.icons[k] || {}; out.push({ key: k, name: v.name || k, category: v.category || '' }); });
+    Object.keys(E.icons).forEach(function (k) { if (!/^[a-z0-9_]+$/.test(k)) return; var v = E.icons[k] || {}; out.push({ key: k, name: String(v.name || k), category: String(v.category || '') }); });
     return out.sort(function (a, b) { return (a.category + a.name).localeCompare(b.category + b.name); });
   }
   function animaraSlot(id, kind, size) {
-    var s = size || 48;
-    return '<span class="oi okie-anim" data-entity="' + String(id).replace(/[^a-z0-9_.]/gi, '') + '" data-kind="' + kind + '" style="display:inline-flex;width:' + s + 'px;height:' + s + 'px;" aria-hidden="true"></span>';
+    var s = Math.max(1, Math.round(+size || 48));
+    return '<span class="oi okie-anim" data-entity="' + String(id).replace(/[^a-z0-9_.]/gi, '') + '" data-kind="' + String(kind || '').replace(/[^a-z0-9_]/gi, '') + '" style="display:inline-flex;width:' + s + 'px;height:' + s + 'px;" aria-hidden="true"></span>';      // both names cleaned: they come from settings and from the Animara add-on
   }
   /** Puts icon markup into a host and brings any Animara slot in it to life; the same markup again only refreshes the state. */
   function setIcon(host, html) {

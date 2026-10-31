@@ -310,10 +310,10 @@
   /** Many sources (a Roku lists every app): a drop-down instead of a wall of chips. The native picker, so a phone shows its own wheel. */
   var SOURCE_CHIPS_MAX = 6;
   function sourceSelect(o) {
-    var sel = h('select.src-sel', { 'aria-label': o.label }), cur = '';
+    var sel = h('select.src-sel', { 'aria-label': o.label });
     sel.appendChild(h('option', { value: '' }, o.placeholder));
     o.options.forEach(function (s) { sel.appendChild(h('option', { value: s }, s)); });
-    sel.addEventListener('change', function () { if (sel.value) { cur = sel.value; o.onChange(sel.value); } });
+    sel.addEventListener('change', function () { if (sel.value) { o.onChange(sel.value); } });
     var el = h('div.src-selw', null, sel, h('span.src-chev', { html: UI.icon('chevdown', 18) }));
     return { el: el, set: function (v) { if (document.activeElement === sel || (sel.getRootNode && sel.getRootNode().activeElement === sel)) return; var want = o.options.indexOf(v) >= 0 ? v : ''; if (sel.value !== want) sel.value = want; } };
   }
@@ -480,7 +480,6 @@
 
   // ---------------------------------------------------------- run buttons ----
   function runControl(ctx, item, o, label, service, domain) {
-    var t = T(ctx);
     var b = h('button.runbig', { onclick: function () { svc(ctx, item, domain, service).then(function () { ctx.toast('success', item.name); }).catch(noop); } }, h('span', { html: UI.icon('play', 32) }), h('span', null, label));
     return { el: h('div.dctl', null, h('div.dwrap', null, b)), dispose: noop, update: noop };
   }

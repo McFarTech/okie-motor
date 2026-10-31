@@ -74,3 +74,12 @@ test('Animara icons can be chosen, with their own prefix', () => {
   assert.equal(UI.pickIcon('', 'animara:bulb', true), '', 'a registry icon is never an Animara one (Home Assistant cannot draw it)');
   assert.deepEqual(UI.animaraIcons(), [], 'nothing offered when Animara is not installed');
 });
+
+test('Animara names are never taken for Home Assistant icons, and odd names cannot break out of the page', () => {
+  assert.equal(UI.isMdi('animara:bulb'), false);
+  assert.equal(UI.isMdi('mdi:lightbulb'), true);
+  const slot = UI.animaraSlot('light.x"><b', 'bulb"><img src=x onerror=alert(1)>', 20);
+  assert.ok(!/<img|<b|onerror=alert\(1\)"/.test(slot.replace(/^<span[^>]*>/, '')), 'nothing but the slot itself');
+  assert.ok(!slot.includes('<img'), 'markup in a name is removed');
+  assert.match(slot, /data-kind="bulbimgsrcxonerroralert1"/);
+});

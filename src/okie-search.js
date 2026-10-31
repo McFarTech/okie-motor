@@ -211,6 +211,13 @@
    * Turn a Home Assistant `hass` object into search items.
    * opts: { includeHidden, includeDisabled, includeDiagnostic, lang }
    */
+  /** A shorter name when Home Assistant joins the device's name and the entity's ("Living Room TV Television"): a device's only entity of its kind is called by
+   *  the device's name ("Living Room TV"). Several of a kind ("Hue Bridge Light 1", "... Light 2") keep their full names. Pure, tested. */
+  function tidyName(friendly, deviceName, onlyOfKind) {
+    var f = String(friendly || ''), d = String(deviceName || '').trim();
+    if (!onlyOfKind || !d || f.length <= d.length + 1) return f;
+    return f.toLowerCase().indexOf(d.toLowerCase() + ' ') === 0 ? d : f;
+  }
   function buildCollection(hass, opts) {
     opts = opts || {};
     var states = (hass && hass.states) || {};
@@ -218,6 +225,8 @@
     var devices = (hass && hass.devices) || {};
     var areas = (hass && hass.areas) || {};
     var out = [];
+    var perKind = {};      // device + domain -> how many entities, for tidyName
+    if (opts.tidyNames) Object.keys(states).forEach(function (id) { var r0 = reg[id]; if (r0 && r0.device_id) { var k = r0.device_id + '|' + id.split('.')[0]; perKind[k] = (perKind[k] || 0) + 1; } });
     Object.keys(states).forEach(function (id) {
       var st = states[id];
       var r = reg[id] || {};
@@ -233,7 +242,7 @@
         id: id,
         domain: domain,
         deviceClass: attrs.device_class || null,
-        name: decodeEntities(attrs.friendly_name || r.name || id),
+        name: opts.tidyNames && dev ? tidyName(decodeEntities(attrs.friendly_name || r.name || id), decodeEntities(dev.name_by_user || dev.name || ''), perKind[r.device_id + '|' + domain] === 1) : decodeEntities(attrs.friendly_name || r.name || id),
         areaId: areaId,
         area: area ? area.name : null,
         labels: r.labels || [],
@@ -241,6 +250,8 @@
         unit: attrs.unit_of_measurement || null,
         icon: attrs.icon || r.icon || null,
         category: r.entity_category || null,
+        devName: dev ? decodeEntities(dev.name_by_user || dev.name || '') : '',      // for tidyName when the name comes in again with a new state
+        onlyOfKind: !!(dev && perKind[r.device_id + '|' + domain] === 1),
       });
     });
     return out;
@@ -759,7 +770,7 @@
 
   var api = {
     createEngine: createEngine,
-    buildCollection: buildCollection,
+    buildCollection: buildCollection, tidyName: tidyName,
     norm: norm,
     tokens: tokens,
     osa: osa,

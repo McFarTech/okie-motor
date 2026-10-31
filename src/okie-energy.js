@@ -241,7 +241,7 @@
 
   // ---------------------------------------------------------- the House tab ----
   // The isometric house of the Home Energy card of the Overview, drawn the same way (cream card, black outline), reading the same sensors.
-  var INK = 'var(--eh-ink,rgba(255,255,255,.92))', PAPER = 'var(--eh-paper,#2b2622)', MUTED = 'var(--eh-muted,rgba(255,255,255,.6))', YELLOW = 'var(--eh-yellow,#ffd84a)', WHITE = 'var(--eh-white,rgba(255,255,255,.28))', HOVER = 'var(--eh-hover,rgba(255,255,255,.07))',
+  var INK = 'var(--eh-ink,rgba(255,255,255,.92))', PAPER = 'var(--eh-paper,#2b2622)', YELLOW = 'var(--eh-yellow,#ffd84a)', WHITE = 'var(--eh-white,rgba(255,255,255,.28))', HOVER = 'var(--eh-hover,rgba(255,255,255,.07))',
     SOFT = 'var(--eh-soft,rgba(255,255,255,.1))', SOFT2 = 'var(--eh-soft2,rgba(255,255,255,.17))', WIN = 'var(--eh-win,rgba(255,255,255,.05))', DARK = 'var(--eh-dark,#1c1a18)';
   var C30 = Math.cos(Math.PI / 6), S30 = Math.sin(Math.PI / 6);
   function P(o, x, y, z) { return [o.x + (x - y) * C30 * o.s, o.y + (x + y) * S30 * o.s - z * o.s]; }
@@ -415,7 +415,7 @@
   function serverTab(ctx, body) {
     var t = function (k, v) { return core.t(k, ctx.lang(), v); }, de = ctx.lang() === 'de', sig = '';
     function draw() {
-      var H = readHouse(ctx.hass().states), a = H.serverAttr, sys = a.system || {}, next = JSON.stringify([H.serverW, a, H.containers]);
+      var H = readHouse(ctx.hass().states), a = H.serverAttr, next = JSON.stringify([H.serverW, a, H.containers]);
       if (next === sig) return; sig = next; body.innerHTML = '';
       if (H.serverW == null) body.appendChild(h('div.note-l', null, t('e.srv_unavail')));
       else {

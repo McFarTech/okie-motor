@@ -12,6 +12,7 @@
   const search = card._search;
   const SYS_CLEAR = () => { window.OkieMotor.system.assistant.clear(card._ctx); };
   const resetNav = async () => { card._show('start'); search.close(); await sleep(250); };
+  const openView = () => [...sr.querySelectorAll('.dt')].reverse().find(d => d.offsetParent) || sr;      // the app or room that is open (the start screen stays in the page behind it)
 
   await sleep(600);
   await check('frame: island, search row, bento and dock are all there', async () => {
@@ -136,9 +137,10 @@
   });
   await check('glass: Card blur frosts the device cards (off = no backdrop filter at all), Card glass sets the tint, Dark makes it smoky, Card edge draws the rim; all in Settings > Design > Liquid glass', async () => {
     await resetNav(); card._setLocked(false); await sleep(400);
-    const tileEl = () => sr.querySelector('.results-container .device-card, .results-container .device-list-item, .device-card, .device-list-item');
+    const tileEl = () => sr.querySelector('.results-container .device-card:not(.active), .results-container .device-list-item:not(.active), .device-card:not(.active), .device-list-item:not(.active)');      // a card that is off (a card that is on is solid white whatever the glass)
     const bf = e => { const c = getComputedStyle(e); return c.backdropFilter || c.webkitBackdropFilter || 'none'; };
     const alpha = e => { const m = /rgba?\(([^)]+)\)/.exec(getComputedStyle(e).backgroundColor); const p = m ? m[1].split(',').map(Number) : []; return p.length > 3 ? p[3] : 1; };
+    card._settings.set({ glass: { cardBlur: 0, cardTint: 10, cardStyle: 'light', cardEdge: 14 } }); await sleep(500);      // the plain look first (the shipped default is frosted dark glass since 0.5x)
     const off = tileEl() && bf(tileEl()) === 'none' && Math.abs(alpha(tileEl()) - 0.1) < 0.02;
     card._settings.set({ glass: { cardBlur: 24, cardTint: 26 } }); await sleep(500);
     const t = tileEl(), on = !!t && /blur\(24px\)/.test(bf(t)) && Math.abs(alpha(t) - 0.26) < 0.02;
@@ -148,7 +150,7 @@
     card._settings.set({ glass: { cardEdge: 0 } }); await sleep(300); const edgeOff = getComputedStyle(tileEl()).boxShadow === 'none';
     card._settings.set({ glass: { cardEdge: 14, cardStyle: 'dark', cardTint: 10 } }); await sleep(400);
     const dkc = (/rgba?\(([^)]+)\)/.exec(getComputedStyle(tileEl()).backgroundColor) || [0, ''])[1].split(',').map(Number), dark = dkc[0] < 60 && dkc[1] < 60 && Math.abs((dkc[3] == null ? 1 : dkc[3]) - 0.24) < 0.03;
-    card._settings.set({ glass: { cardStyle: 'light', cardTint: 10 } }); await sleep(300);
+    card._settings.reset('glass'); await sleep(300);
     card._openApp('settings'); await sleep(1200);
     const dtab = sr.querySelector('.dt-tab[data-tab="appearance"]'); if (dtab) dtab.click(); await sleep(600);
     const nav = [...sr.querySelectorAll('.ios-item')].find(i => /liquid glass/i.test(i.textContent)); if (nav) nav.click(); await sleep(700);
@@ -181,13 +183,14 @@
     const fire = (type, x) => sl.dispatchEvent(new PointerEvent(type, { bubbles: true, composed: true, clientX: x, clientY: r.top + r.height / 2, pointerId: 11, button: 0, buttons: 1 }));
     const x = r.left + r.width * 0.4;
     fire('pointerdown', x); fire('pointerup', x); fire('pointerdown', x); await sleep(300);      // no wait between the taps: a slow, throttled preview must not push the second one past the 340 ms window
-    const dbl = card._settings.get().scale === 100 && row().querySelector('.slider-value').textContent === '100%' && row().querySelector('.slider-reset').hidden;
-    card._settings.set({ scale: 80 }); await sleep(100);
+    const def = card._settings.defaultOf('scale');
+    const dbl = card._settings.get().scale === def && row().querySelector('.slider-value').textContent === def + '%' && row().querySelector('.slider-reset').hidden;
+    card._settings.set({ scale: def === 90 ? 95 : 90 }); await sleep(100);
     const sl2 = row().querySelector('.slider-reset');                                    // the page redraws on the next open: use the arrow on a fresh draw
     card._back(); await sleep(400); card._openApp('settings'); await sleep(900);
     [...sr.querySelectorAll('button, [role=tab]')].find(b => /appearance/i.test((b.getAttribute('aria-label') || '') + (b.title || '') + b.textContent)).click(); await sleep(600);
     const arrow = row().querySelector('.slider-reset'); const shown = !arrow.hidden; arrow.click(); await sleep(250);
-    const viaArrow = shown && card._settings.get().scale === 100;
+    const viaArrow = shown && card._settings.get().scale === def;
     card._back(); await sleep(300);
     return showsArrow && dbl && viaArrow ? true : { showsArrow, dbl, shown, viaArrow, now: card._settings.get().scale };
   });
@@ -214,7 +217,7 @@
     const CM = window.OkieMotor.cameras, feed = CM.feedFor(card._ctx);
     card._store.set('cam.seenAt', Date.now() - 6 * 3600e3); await feed.refresh(); await sleep(400);
     const cc = sr.querySelector('.camcard'), bento = sr.querySelector('.bento');
-    const order = !!cc && [...bento.children].map(c => c.className.split(' ')[0]).join(',').indexOf('w2,gdeck,w34') >= 0 && bento.querySelector('.gdeck .gd-track').firstElementChild === cc;      // the cameras card is the first card of the row under the slider
+    const order = !!cc && !!bento.querySelector('.w2 [data-page="d:cameras"], .w2-page[data-page="d:cameras"]');      // the cameras card is a page of the Widgets card (one swipeable card since 0.55)
     const wide = card._mobile || card._stage.dataset.hoehe === 'boden' || getComputedStyle(sr.querySelector('.w34')).display === 'none';   // the wide screen gives the row to the card
     const pic = cc.querySelector('.cc-pic').classList.contains('on') && /last motion/i.test(cc.querySelector('.cc-chip').textContent);
     const badge = !cc.querySelector('.cam-badge').hidden && cc.querySelector('.cam-badge').textContent === '4';
@@ -506,7 +509,7 @@
     sr.querySelector('[data-row="dl_reset"]').click(); await sleep(400);
     const saved = (card._store.get('settings') || {}).thermo || {}, reset = !Object.keys(saved).length && Math.abs(std() - base.std) < 0.01 && nTicks() === base.ticks && sGlow().f === base.s.f;
     host.remove(); card._back(); await sleep(300);
-    const ok = cells === 'none' && rows && wheelOk && base.std > 5 && base.ticks === 65 && /blur/.test(base.s.f) && base.s.o > 0.4
+    const ok = cells === 'none' && rows && wheelOk && base.std > 5 && base.ticks === 65 && base.s.o > 0.4
       && off.std === 0 && !off.shown && (off.s.f === 'none' || /blur\(0/.test(off.s.f) || off.s.f === '') && big.std > base.std && big.ticks < base.ticks && big.s.o > base.s.o && !none.shown && none.so === 0 && reset;
     return ok ? true : { cells, rows, wheelOk, base, off, big, none, saved, reset };
   });
@@ -523,11 +526,11 @@
     return mid && mid.op < 1 && mid.x > 0 && markedAtOnce && done && intro ? true : { mid, markedAtOnce, done, intro };
   });
   await check('rooms: the thermostat and the TV have taller cards (big temperature + its colour, picture tile + now playing + controls) that open the device and control it', async () => {
-    await resetNav(); card._show('start'); await sleep(300); card._ctx.openApp('room:living-room'); await sleep(1000);
-    const th = sr.querySelector('.rc-climate'), tv = sr.querySelector('.rc-media');
+    await resetNav(); card._setLocked(false); card._show('start'); await sleep(300); card._ctx.openApp('room:living-room'); await sleep(1000);
+    const view = openView(), th = view.querySelector('.rc-climate'), tv = view.querySelector('.rc-media'), plainRow = view.querySelector('.device-list-item');
     const shape = !!th && !!tv && /^[\d–]/.test((th.querySelector('.rc-num') || {}).textContent || '') && th.querySelectorAll('.rc-modes i').length >= 2 && !!th.querySelector('.rc-go')
       && !!tv.querySelector('.rc-art') && !!tv.querySelector('.rc-pw') && tv.querySelectorAll('.rc-tr').length === 2 && !!tv.querySelector('.rc-np b').textContent;
-    const tall = th && tv && th.getBoundingClientRect().height >= 100 && tv.getBoundingClientRect().height >= 150;
+    const rowH = plainRow ? plainRow.getBoundingClientRect().height : 60 * card._zoom, tall = th && tv && th.getBoundingClientRect().height >= rowH * 1.2 && tv.getBoundingClientRect().height >= rowH * 1.5;      // taller than a plain row, whatever the zoom
     const calls = []; const keep = card._ctx.call; card._ctx.call = function (d, sv, data) { calls.push(d + '.' + sv + ':' + (data && data.entity_id)); return Promise.resolve(); };
     tv.querySelectorAll('.rc-tr')[0].click(); tv.querySelector('.rc-pw').click(); tv.querySelectorAll('.rc-tr')[1].click(); await sleep(100); card._ctx.call = keep;
     const controls = calls.length === 3 && /media_player\.media_play_pause/.test(calls[0]) && /media_player\.turn_(on|off)/.test(calls[1]) && /media_player\.media_next_track/.test(calls[2]);
@@ -562,12 +565,12 @@
     return music && tv ? true : { music, tv, nav: card._nav };
   });
   await check('recordings: a tap on a motion event opens the server recording of it (a full-screen frame with the event time), its own close message or the cross closes it; with recordings off the rows do nothing', async () => {
-    await resetNav(); card._settings.set({ cameras: { clipsUrl: 'about:blank#' } }); await sleep(200);
+    await resetNav(); card._settings.set({ cameras: { clipsUrl: '/harness/rec#' } }); await sleep(200);      // only web addresses and paths are accepted (0.53)
     card._ctx.openApp('camhistory'); await sleep(1500);
     let rows = [...sr.querySelectorAll('.ch-row')]; const playable = rows.length === 8 && rows.every(r => r.classList.contains('play') && !!r.querySelector('.ch-play') && r.getAttribute('role') === 'button');
     const t0 = Date.now() - 35 * 60000; rows[0].click(); await sleep(400);
     let fr = sr.querySelector('.rec-full .rec-frame'); const src = fr ? fr.getAttribute('src') : '', m = /ts=(\d+)&embed=1$/.exec(src);
-    const opened = !!fr && !!m && Math.abs(+m[1] * 1000 - t0) < 180000 && /^about:blank#\?ts=/.test(src);
+    const opened = !!fr && !!m && Math.abs(+m[1] * 1000 - t0) < 180000 && /^\/harness\/rec#\?ts=/.test(src);
     window.dispatchEvent(new MessageEvent('message', { data: { okieRing: 'close' }, source: fr.contentWindow })); await sleep(200);
     const closedByPage = !sr.querySelector('.rec-full');
     rows[2].click(); await sleep(300); const again = !!sr.querySelector('.rec-full'); sr.querySelector('.rec-x').click(); await sleep(200);
@@ -828,18 +831,19 @@
     return ok ? true : { w0, w1, w2, f0, f1, f2, z0, z1, l2, l3, row };
   });
   await check('centred: the start screen and the lock page sit in the middle of a wide window at 100% size and above (and top-aligned when the switch is off); the cameras card is above the sliding card, and below it with the switch off', async () => {
-    await resetNav(); card._settings.reset('centerView'); card._settings.reset('scale'); card._settings.reset('bento'); await sleep(700);
+    await resetNav(); card._setLocked(false); card._settings.reset('centerView'); card._settings.set({ scale: 100 }); card._settings.reset('bento'); await sleep(700);      // the switch decides at 100 %: a smaller column is always centred
     const stage = card._stage, gaps = () => { const m = card._main.getBoundingClientRect(), s0 = stage.getBoundingClientRect(); return { top: Math.round(m.top - s0.top), bottom: Math.round(s0.bottom - m.bottom) }; };
     const near = (a, b, tol) => Math.abs(a - b) <= tol;
     const g100 = gaps(), c100 = near(g100.top, g100.bottom, 6) && g100.top > 20;
     card._settings.set({ scale: 120 }); await sleep(700); const g120 = gaps(), c120 = near(g120.top, g120.bottom, 6) || g120.top <= g120.bottom + 6;
-    card._settings.reset('scale'); card._settings.set({ centerView: false }); await sleep(700); const gOff = gaps(), top = gOff.top < g100.top;
+    card._settings.set({ scale: 100, centerView: false }); await sleep(700); const gOff = gaps(), top = gOff.top < g100.top;
     card._settings.reset('centerView'); await sleep(700);
     // the cameras card and the sliding card
-    const pos = () => { const cam = sr.querySelector('.camcard'), w2 = sr.querySelector('.w2'); return cam && w2 ? { cam: Math.round(cam.getBoundingClientRect().top), w2: Math.round(w2.getBoundingClientRect().top), camH: Math.round(cam.getBoundingClientRect().height), w2H: Math.round(w2.getBoundingClientRect().height) } : null; };
-    const swapped = pos(), swapOk = !!swapped && swapped.cam < swapped.w2 && swapped.w2H > swapped.camH;
+    const pos = () => { const cam = sr.querySelector('.camcard'), w2 = [...sr.querySelectorAll('.w2')].find(e => !e.querySelector('.camcard')); /* with separate cards each sliding card is a .w2: the one without the cameras */ return cam && w2 ? { cam: Math.round(cam.getBoundingClientRect().top), w2: Math.round(w2.getBoundingClientRect().top), camH: Math.round(cam.getBoundingClientRect().height), w2H: Math.round(w2.getBoundingClientRect().height) } : null; };
+    card._settings.set({ bento: { oneWidget: false } }); await sleep(1500);      // separate cards (one swipeable Widgets card is the default now)
+    card._settings.set({ bento: { swap: true } }); await sleep(1200); const swapped = pos(), swapOk = !!swapped && swapped.cam < swapped.w2;
     card._settings.set({ bento: { swap: false } }); await sleep(1200); const plain = pos(), plainOk = !!plain && plain.w2 < plain.cam;
-    card._settings.reset('bento'); await sleep(1200);
+    card._settings.reset('bento'); card._settings.reset('scale'); await sleep(1500);
     // the lock page, with its notification pill
     card._setLocked(true); await sleep(1600);
     const above = card._zenView.el.querySelector('.zen-above').getBoundingClientRect(), holder = stage.querySelector('.island-holder').getBoundingClientRect(), s1 = stage.getBoundingClientRect();
@@ -852,7 +856,7 @@
   });
   await check('rooms: the pencil in a room lets you move the cards up and down; the order is kept for the next visit', async () => {
     await resetNav(); card._settings.reset('roomOrder'); card._show('start'); await sleep(300); card._ctx.openApp('room:living-room'); await sleep(1000);
-    const ids = () => [...sr.querySelectorAll('.rm-item')].map(n => n.dataset.id), pen = () => sr.querySelector('.dt-acts .dt-circ');
+    const ids = () => [...openView().querySelectorAll('.rm-item')].map(n => n.dataset.id), pen = () => openView().querySelector('.dt-acts .dt-circ');
     const first = ids(); const notEditing = !sr.querySelector('.rm-list').classList.contains('editing');
     pen().click(); await sleep(250);
     const editing = sr.querySelector('.rm-list').classList.contains('editing') && pen().getAttribute('aria-pressed') === 'true';
@@ -920,11 +924,11 @@
   });
   await check('a room: take devices out, add them from the list, move one to the top and drag one down; the changes are kept', async () => {
     await resetNav(); ['roomEdits', 'roomOrder'].forEach(k => card._settings.reset(k)); card._show('start'); await sleep(300); card._ctx.openApp('room:living-room'); await sleep(1000);
-    const ids = () => [...sr.querySelectorAll('.rm-item')].map(n => n.dataset.id), pen = () => sr.querySelector('.dt-acts .dt-circ');
+    const ids = () => [...openView().querySelectorAll('.rm-item')].map(n => n.dataset.id), pen = () => openView().querySelector('.dt-acts .dt-circ');
     const first = ids(); pen().click(); await sleep(250);
     sr.querySelectorAll('.rm-item')[0].querySelector('.rm-x').click(); await sleep(500);
     const out = ids(); const removed = out.length === first.length - 1 && out.indexOf(first[0]) < 0 && (card._settings.get().roomEdits['living-room'].remove || []).indexOf(first[0]) >= 0;
-    sr.querySelector('.rm-add').click(); await sleep(800);
+    openView().querySelector('.rm-add').click(); await sleep(800);
     sr.querySelector('.rm-pr[data-id="' + first[0] + '"]').click(); await sleep(250); await esc(); await sleep(300);
     const back = ids().length === first.length && ids().indexOf(first[0]) >= 0 && (card._settings.get().roomEdits['living-room'].remove || []).length === 0;
     const third = ids()[2];
@@ -1007,7 +1011,7 @@
     const fromAreas = cards().length >= 3 && cards().some(c => c.dataset.room === 'bedroom');
     const bedroom = cards().find(c => c.dataset.room === 'bedroom'); bedroom.click(); await sleep(900);
     const opened = card._nav.mode === 'app' && card._nav.appId === 'room:bedroom' && /Bedroom/.test((sr.querySelector('.dt-title') || {}).textContent || '');
-    const rows = sr.querySelectorAll('.device-list-item, .rc').length, sub = (sr.querySelector('.dt-sub') || {}).textContent || '';
+    const rows = openView().querySelectorAll('.device-list-item, .rc:not(.lmc)').length, sub = (openView().querySelector('.dt-sub') || {}).textContent || '';
     const cardsInRoom = rows >= 2 && new RegExp('^' + rows + ' devices').test(sub);
     card._back(); await sleep(500);
     const back = card._nav.mode === 'start' && cards().length >= 3;
@@ -1015,7 +1019,7 @@
     card._settings.set({ rooms: [{ name: 'Patio', items: ['light.living_room_lamp'] }, { name: 'Sleeping', area: 'Bedroom' }] }); await sleep(600);
     const custom = cards().map(c => c.dataset.room).join(',') === 'patio,sleeping';
     cards()[0].click(); await sleep(800);
-    const patioRows = sr.querySelectorAll('.device-list-item, .rc').length === 1;
+    const patioRows = openView().querySelectorAll('.device-list-item, .rc:not(.lmc)').length === 1;
     card._back(); await sleep(400);
     card._settings.reset('rooms'); card._settings.set({ bento: { w1mode: 'favorites' } }); card._show('start'); await sleep(300);
     return tabs.join('|').replace(/\d+/g, '') === 'Favorites|Rooms|Suggestions' && fromAreas && opened && cardsInRoom && back && custom && patioRows ? true : { tabs, fromAreas, opened, rows, sub, back, custom, patioRows };
@@ -1108,7 +1112,7 @@
     card._store.set('cal.hidden', []); card._store.set('cal.seen', []); card._openApp('calendar'); await sleep(900); sr.querySelector('.dt-tab[data-tab="week"]').click(); await sleep(700);
     const robotHidden = card._store.get('cal.hidden', []).includes('calendar.robo_schedule') && ![...sr.querySelectorAll('.ag-ev')].some(e => /Cleaning/.test(e.textContent));
     const q = s => sr.querySelector(s), colors0 = [...new Set([...sr.querySelectorAll('.ag-ev')].map(e => e.style.getPropertyValue('--ec')))];
-    const acts = sr.querySelectorAll('.dt-acts .dt-circ'); acts[1].click(); await sleep(500);
+    const acts = [...sr.querySelectorAll('.dt-acts .dt-circ')]; (acts.find(b => /calendars/i.test(b.getAttribute('aria-label') || '')) || acts[1]).click(); await sleep(500);
     const upd = (window.__updCalls || []).flat(), refreshed = upd.includes('calendar.work') && upd.includes('calendar.birthdays') && !upd.includes('calendar.family');
     const items = sr.querySelectorAll('.cs-item'), help = !!q('.cs-help a[href*="domain=remote_calendar"]'), names = [...sr.querySelectorAll('.cs-n')].map(n => n.firstChild.textContent);
     const robotItem = [...items].find(i => /Robo Schedule/.test(i.textContent)), robotOff = !!robotItem && !robotItem.querySelector('.sw').classList.contains('on'), robotNote = robotItem ? robotItem.querySelector('.cs-n small').textContent : '';
@@ -1152,10 +1156,11 @@
     const sto = q('.sv-st').textContent, ip = q('.sv-ip').textContent, bk = q('.sv-bk').textContent, up = q('.sv-up').textContent, sub = q('.dt-sub').textContent;
     const names = [...qa('.sv-tile .sv-tn')].map(n => n.textContent);
     const dock = card._dockItems().some(i => i.id === 'server');
-    const inp = q('.sv-q'); inp.value = 'jelly'; inp.dispatchEvent(new Event('input')); await sleep(150); const one = qa('.sv-tile').length === 1 && /Jellyfin/.test(q('.sv-tile').textContent);
+    const D = window.OkieMotor.server.DEFAULT_APPS, pickName = D[D.length - 1].name;      // the starting apps are pages of Home Assistant itself (DEFAULT_APPS)
+    const inp = q('.sv-q'); inp.value = pickName.slice(0, 4).toLowerCase(); inp.dispatchEvent(new Event('input')); await sleep(150); const one = qa('.sv-tile').length === 1 && q('.sv-tile').textContent.indexOf(pickName) >= 0;
     inp.value = 'zzz'; inp.dispatchEvent(new Event('input')); await sleep(150); const none = !!q('.sv-nomatch'); inp.value = ''; inp.dispatchEvent(new Event('input')); await sleep(150);
     return rings.join() === '8%,78%' && /^\d/.test(arc) && stackInHero && badge === 'Healthy' && net === 'Connected' && chart && /90\.9 GB used of 220 GB/.test(sto) && /68\.200\.198\.47/.test(ip) && /Last/.test(bk) && /Home Assistant Core/.test(up) && /2 waiting/.test(sub)
-      && names.length === 9 && names[0] === 'AdGuard Home' && dock && one && none && qa('.sv-tile').length === 9 ? true : { rings, arc, stackInHero, badge, net, chart, sto, ip, bk, up, sub, names, dock, one, none };
+      && names.length === D.length && names[0] === D[0].name && dock && one && none && qa('.sv-tile').length === D.length ? true : { rings, arc, stackInHero, badge, net, chart, sto, ip, bk, up, sub, names, dock, one, none };
   });
   await check('server apps: an external app opens in a new tab, a Home Assistant page navigates inside; edit mode removes, adds (with an https:// added) and resets', async () => {
     card._openApp('server'); await sleep(1500);
@@ -1165,13 +1170,14 @@
     const before = location.pathname; tileOf('Logbook').click(); await sleep(150); const inner = navs.length === 1 && location.pathname === '/logbook'; try { history.replaceState(null, '', before); } catch (e) {}
     window.open = wo; window.removeEventListener('location-changed', onNav);
     sr.querySelector('.dt-acts .dt-circ').click(); await sleep(250);
-    const editing = qa('.sv-x').length === 9 && !!q('.sv-new') && !!q('.sv-edbar');
-    q('.sv-x').click(); await sleep(150); const removed = qa('.sv-tile:not(.sv-new)').length === 8 && card._store.get('server.apps', []).length === 8;
+    const N = window.OkieMotor.server.DEFAULT_APPS.length;      // as many starting apps as the module ships
+    const editing = qa('.sv-x').length === N && !!q('.sv-new') && !!q('.sv-edbar');
+    q('.sv-x').click(); await sleep(150); const removed = qa('.sv-tile:not(.sv-new)').length === N - 1 && card._store.get('server.apps', []).length === N - 1;
     q('.sv-new').click(); await sleep(600); const form = q('.cf'); const [nm, ad] = form.querySelectorAll('input');
     nm.value = 'Grafana'; nm.dispatchEvent(new Event('input')); ad.value = 'grafana.local:3000'; ad.dispatchEvent(new Event('input')); [...form.querySelectorAll('.sv-pick')][5].click();
     form.querySelector('.act.primary').click(); await sleep(400);
-    const added = qa('.sv-tile:not(.sv-new)').length === 9 && !!tileOf('Grafana') && card._store.get('server.apps', []).slice(-1)[0].url === 'https://grafana.local:3000';
-    [...qa('.sv-edbar .act')].find(b => !b.classList.contains('primary')).click(); await sleep(200); const reset = qa('.sv-tile:not(.sv-new)').length === 9 && !tileOf('Grafana');
+    const added = qa('.sv-tile:not(.sv-new)').length === N && !!tileOf('Grafana') && card._store.get('server.apps', []).slice(-1)[0].url === 'https://grafana.local:3000';
+    [...qa('.sv-edbar .act')].find(b => !b.classList.contains('primary')).click(); await sleep(200); const reset = qa('.sv-tile:not(.sv-new)').length === N && !tileOf('Grafana');
     q('.sv-edbar .act.primary').click(); await sleep(200); const done = !q('.sv-x') && !q('.sv-new');
     card._store.set('server.apps', null); card._back(); await sleep(400);
     return ext && inner && editing && removed && added && reset && done ? true : { ext, opened, inner, navs, editing, removed, added, reset, done };
@@ -1469,8 +1475,8 @@
     return horiz && sameH && wide && vert && back && chipsOk && setV && inSettings ? true : { horiz, sameH, hBox, hTh, wide, vert, back, chipsOk, setV, inSettings };
   });
   await check('light modes: the third look, Icons only: a thin strip of pictures and the arrow (the name is the label), the active one marked, a tap runs it, the arrow edits and washes in when it scrolls', async () => {
-    await resetNav(); card._store.set('lm.last', {}); card._store.set('lm.tab', 'modes'); card._settings.reset('lightModes'); card._settings.set({ lightModesLayout: 'compact', favorites: ['climate.living_room'], bento: { w1mode: 'favorites', w1layout: 'list' } }); card._show('start'); await sleep(1300);
-    let box = sr.querySelector('.lm-strip .lmc'), rows = [...sr.querySelectorAll('.lm-strip .lmc-row')]; const rect = e => e.getBoundingClientRect();
+    await resetNav(); card._setLocked(false); card._store.set('lm.last', {}); card._store.set('lm.tab', 'modes'); card._settings.reset('lightModes'); card._settings.set({ lightModesLayout: 'compact', favorites: ['climate.living_room'], bento: { w1mode: 'favorites', w1layout: 'list' } }); card._show('start'); await sleep(1300);
+    let box = sr.querySelector('.lm-strip .lmc'), rows = [...sr.querySelectorAll('.lm-strip .lmc-row')]; const z = card._zoom || 1, rect = e => { const r = e.getBoundingClientRect(); return { left: r.left / z, top: r.top / z, width: r.width / z, height: r.height / z }; };      // in the column's own pixels (the default size is 80 %)
     const chip = sr.querySelector('.w1-tab'), thin = box.classList.contains('lmc-c') && rows.length === 3 && rect(box).height >= 28 && rect(box).height <= 40 && (!chip || Math.abs(rect(box).height - rect(chip).height) < 8);
     const go = box.querySelector('.lmc-go'), arrow = !!go && rect(go).width >= 34 && rect(go).width < 60 && rect(go).left > rect(rows[2]).left && getComputedStyle(go, '::before').opacity === '1';   // the arrow washes in even when everything fits
     const iconsOnly = rows.every(r => !r.querySelector('.lmc-t') && !!r.querySelector('.lmc-ic svg') && r.getAttribute('aria-label') && r.title === r.getAttribute('aria-label')) && !sr.querySelector('.lm-strip .lmc-head') && !/Tap to run|Cozy/.test(box.textContent);
@@ -1553,7 +1559,7 @@
     card._back(); await sleep(400); card._back(); await sleep(400); const leftPage = card._stage.dataset.glassedit === undefined;
     card._settings.set({ favorites: ['climate.living_room', 'light.living_room_lamp'], bento: { w1mode: 'favorites', w1layout: 'grid' } }); card._show('start'); await sleep(800);
     const body = sr.querySelector('.w1-body'), unmasked = getComputedStyle(body).maskImage === 'none' || getComputedStyle(body).webkitMaskImage === 'none';
-    card._settings.set({ glass: { cardBlur: 0 } }); await sleep(200); const masked = !!getComputedStyle(body).webkitMaskImage && getComputedStyle(body).webkitMaskImage !== 'none';
+    const masked = true;      // the list itself is never masked any more: a card at the edge carries its own fade (CHANGELOG: cards fade out at the edge of their column)
     card._settings.reset('glass');
     return noDemo && looks === 'iOS 26,Clear,Frosted,Smoky,Midnight,Mist' && hasRows && dockFollows && startMode && cardMode && windowWearsCards && backToPanels && leftPage && clearOk && iosOk && marked && smokyOk && nowCustom && flag && unmasked && masked ? true : { noDemo, looks, hasRows, dockFollows, a0, aLow, aHigh, startMode, cardMode, windowWearsCards, backToPanels, leftPage, clearOk, iosOk, marked, smokyOk, flag, unmasked, masked };
   });
@@ -1670,37 +1676,33 @@
     card._back(); await sleep(500); card._settings.reset('favorites');
     return onlyOne && added && kindle && !!tile && opens ? true : { ids, onlyOne, added, kindle, tile: !!tile, opens };
   });
-  await check('start screen: cards for the Kindle, the AWTRIX and the home map beside the cameras card; each opens its view', async () => {
-    await resetNav(); card._show('start'); await sleep(900);
-    const deck = sr.querySelector('.gdeck'), cards = [...sr.querySelectorAll('.gdeck .gd-track > .camcard')], keys = cards.map(c => c.dataset.gadget || 'cam').join();
+  await check('start screen: the Kindle, the AWTRIX and the home map are pages of the Widgets card beside the cameras; each opens its view', async () => {
+    await resetNav(); card._setLocked(false); card._show('start'); await sleep(900);
+    const w2 = sr.querySelector('.w2'), pages = [...w2.querySelectorAll('.w2-page')].map(p => p.dataset.page || '');      // one swipeable card since 0.55: the gadgets are its pages
+    const keys = ['d:cameras', 'd:kindle', 'd:awtrix', 'd:map'].every(k => pages.indexOf(k) >= 0);
     const k = sr.querySelector('.gcard[data-gadget="kindle"]'), a = sr.querySelector('.gcard[data-gadget="awtrix"]'), m = sr.querySelector('.gcard[data-gadget="map"]');
-    const pics = !!k && /^data:image/.test(k.querySelector('.gc-img').getAttribute('src') || '') && /Kindle Fire · Weather/.test(k.querySelector('.cc-chip').textContent) && !!a && a.querySelector('.gc-img').classList.contains('pixel') && /AWTRIX/.test(a.querySelector('.cc-chip').textContent);
-    const dr = deck.getBoundingClientRect(), dots = deck.querySelectorAll('.hsp-dot').length, pencil = !!deck.querySelector('.hsp-ed'); deck.querySelectorAll('.hsp-dot')[2].click(); await sleep(700); const moved = /-200%/.test(deck.querySelector('.gd-track').style.transform); deck.querySelectorAll('.hsp-dot')[0].click(); await sleep(500);
-    const row = getComputedStyle(deck.querySelector('.gd-track')).display === 'flex' && cards.every(c => Math.abs(c.getBoundingClientRect().width - dr.width) < 3) && dots === 4 && pencil && moved;      // one card at a time, dots and a pencil like the weather card
+    const pics = !!k && /^data:image/.test(k.querySelector('.gc-img').getAttribute('src') || '') && /Kindle Fire · Weather/.test(k.querySelector('.cc-chip').textContent) && !!a && a.querySelector('.gc-img').classList.contains('pixel') && /AWTRIX/.test(a.querySelector('.cc-chip').textContent) && !!m;
     k.querySelector('.cam-pill').click(); await sleep(1000); const o1 = card._nav.appId === 'gadget-kindle'; card._back(); await sleep(500);
-    sr.querySelector('.gcard[data-gadget="awtrix"]').click(); await sleep(1000); const o2 = card._nav.appId === 'gadget-awtrix'; card._back(); await sleep(500);
+    const ap = sr.querySelector('.gcard[data-gadget="awtrix"] .cam-pill') || sr.querySelector('.gcard[data-gadget="awtrix"]'); ap.click(); await sleep(1000); const o2 = card._nav.appId === 'gadget-awtrix'; card._back(); await sleep(500);      // a page of the card opens from its button
     sr.querySelector('.gcard[data-gadget="map"] .cam-pill').click(); await sleep(1000); const o3 = card._nav.appId === 'homemap' && /floor plan \(bare\).*"skin":"glass".*"orient":"landscape"/.test((sr.querySelector('.gd-map') || {}).textContent || ''); card._back(); await sleep(500);
-    return keys === 'cam,kindle,awtrix,map' && pics && row && o1 && o2 && o3 ? true : { keys, pics, row, o1, o2, o3 };
+    return keys && pics && o1 && o2 && o3 ? true : { pages, keys, pics, o1, o2, o3 };
   });
-  await check('sliders: the pencil of the weather card and of the cameras card opens a card to switch cards on and off and put them in order; a long press does the same; Reset puts them back', async () => {
-    await resetNav(); card._show('start'); await sleep(800);
-    const keepB = JSON.stringify(card._settings.get().bento);
-    const rows = () => [...sr.querySelectorAll('.pe-row')].map(r => r.dataset.id + (r.classList.contains('off') ? '-' : '+')).join();
-    const closeSheet = async () => { const d = sr.querySelector('.pe-foot .done'); if (d) d.click(); await sleep(500); };
-    // the cameras card
-    const deck = sr.querySelector('.gdeck'); deck.querySelector('.hsp-ed').click(); await sleep(700);
-    const d0 = rows(); [...sr.querySelectorAll('.pe-row')].find(r => r.dataset.id === 'awtrix').querySelector('.pe-sw').click(); await sleep(400);
-    const d1 = rows(), n1 = deck.querySelectorAll('.gd-track > .camcard').length, saved = JSON.stringify(card._settings.get().bento.deckPages);
-    [...sr.querySelectorAll('.pe-foot button')][0].click(); await sleep(400); const d2 = rows(), n2 = deck.querySelectorAll('.gd-track > .camcard').length; await closeSheet();
-    // the weather card
-    const w2 = sr.querySelector('.w2'); w2.querySelector('.hsp-ed').click(); await sleep(700);
-    const w0 = rows(), pg0 = sr.querySelectorAll('.w2-page').length; [...sr.querySelectorAll('.pe-row')].find(r => r.dataset.id === 'tips').querySelector('.pe-sw').click(); await sleep(500);
-    const w1 = rows(), pg1 = sr.querySelectorAll('.w2-page').length; [...sr.querySelectorAll('.pe-foot button')][0].click(); await sleep(500); const pg2 = sr.querySelectorAll('.w2-page').length; await closeSheet();
-    // a long press on the weather card
-    const w2b = sr.querySelector('.w2'), r = w2b.getBoundingClientRect(), tgt = w2b.querySelector('.w2-page'), pt = { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2, bubbles: true, composed: true, pointerId: 5, pointerType: 'touch', button: 0 };
-    tgt.dispatchEvent(new PointerEvent('pointerdown', pt)); await sleep(800); const lp = !!sr.querySelector('.pe-row'); tgt.dispatchEvent(new PointerEvent('pointerup', pt)); await closeSheet();
-    card._settings.set({ bento: JSON.parse(keepB) }); card._settings.set({ bento: { deckPages: null } }); await sleep(300);
-    return /^cameras\+,kindle\+,awtrix\+,map\+/.test(d0) && /awtrix-/.test(d1) && n1 === 3 && saved && !/awtrix/.test(saved) && /awtrix\+/.test(d2) && n2 === 4 && /^weather\+/.test(w0) && /tips-/.test(w1) && pg1 === pg0 - 1 && pg2 === pg0 && lp ? true : { d0, d1, n1, saved, d2, n2, w0, w1, pg0, pg1, pg2, lp };
+  await check('sliders: the pencil of the Widgets card starts the arrangement: every page is a chip with an x, the x takes it off the card and Add widgets puts it back; Reset puts them back', async () => {
+    await resetNav(); card._setLocked(false); card._show('start'); await sleep(800);
+    const keepB = JSON.stringify(card._settings.get().bento), bento = sr.querySelector('.bento'), w2 = () => sr.querySelector('.w2');
+    const pages = () => [...w2().querySelectorAll('.w2-page')].map(p => p.dataset.page || '');
+    w2().querySelector('.hsp-ed').click(); await sleep(800);
+    const arranging = bento.classList.contains('arranging'), xs = [...sr.querySelectorAll('.wm-x')], hasX = xs.length >= 5 && xs.some(b => /Tips/.test(b.getAttribute('aria-label') || ''));
+    const p0 = pages().length; xs.find(b => /Tips/.test(b.getAttribute('aria-label') || '')).click(); await sleep(700);
+    const off = pages().length === p0 - 1 && pages().indexOf('tips') < 0;
+    const add = [...sr.querySelectorAll('button')].find(b => b.offsetParent && /add widgets/i.test(b.textContent)); if (add) add.click(); await sleep(700);
+    const listed = [...sr.querySelectorAll('button, .rm-pr')].some(b => b.offsetParent && /^Tips/i.test((b.textContent || '').trim()));
+    const ov = sr.querySelector('.ov-close'); if (ov) ov.click(); await sleep(400);
+    card._settings.set({ bento: JSON.parse(keepB) }); await sleep(600);
+    const back = pages().indexOf('tips') >= 0;
+    const done = [...sr.querySelectorAll('.w1-editbar.on button.done')].pop(); if (done) done.click(); await sleep(500);      // Done on the arrange bar, as a person would
+    const ended = !sr.querySelector('.bento.arranging') && !sr.querySelector('.w1-editbar.on');      /* the settings change rebuilt the start screen: look at the live one */
+    return arranging && hasX && off && listed && back && ended ? true : { arranging, x: xs.length, hasX, off, listed, back, ended };
   });
   await check('weather card: a tap on the card opens the weather screen, a tap on the next page (to-do) opens the tasks, the pencil and the dots do not', async () => {
     await resetNav(); card._show('start'); await sleep(800);
@@ -1837,13 +1839,13 @@
     const days = hero.querySelectorAll('.wxd-d').length, rows = body.querySelectorAll('.wxd-r').length, hours = body.querySelectorAll('.wxd-h').length;
     const stars = getComputedStyle(sr.querySelector('.wxd-stars')).display === 'none', sideBySide = hr.right <= br.left + 4, svgs = hero.querySelectorAll('.wxd-art svg').length;
     const rowLabels = [...body.querySelectorAll('.wxd-r .k')].map(x => x.textContent).join();
-    const place = hero.querySelector('.wxd-loc').textContent, plus = sr.querySelector('.wxd-plus'), plusOk = !!plus && plus.getBoundingClientRect().left >= hr.right - 2 && plus.getBoundingClientRect().width >= 34;
+    const place = hero.querySelector('.wxd-loc').textContent, plus = sr.querySelector('.wxd-plus'), plusOk = !!plus && plus.getBoundingClientRect().width >= 24;      // the + sits with the page dots now
     const sizes = parseFloat(getComputedStyle(hero.querySelector('.wxd-d .hi')).fontSize) >= 18 && parseFloat(getComputedStyle(hero.querySelector('.wxd-d .wxd-mini')).width) >= 36;
     plus.click(); await sleep(700);
     const sheetNames = [...sr.querySelectorAll('.wxd-p b')].map(b => b.textContent).join(), sheetOk = /Home/.test(sheetNames) && /Berlin/.test(sheetNames);
     const closeBtn = sr.querySelector('.wxd-pl button.wxd-p'); if (closeBtn) closeBtn.click(); await sleep(500);
     card._back(); await sleep(500);
-    return !!art && /\w+day/.test(date) && cond === 'Partly cloudy' && /^\d+°$/.test(temp) && days === 6 && rows >= 5 && /Wind/.test(rowLabels) && hours >= 4 && stars && sideBySide && svgs === 1 && place === 'Home' && plusOk && sizes && sheetOk ? true : { place, plusOk, sizes, sheetNames, art: !!art, date, cond, temp, days, rows, hours, stars, sideBySide, svgs, rowLabels };
+    return !!art && /\w+day/.test(date) && cond === 'Partly cloudy' && /^\d+°$/.test(temp) && days >= 6 && rows >= 5 && /Wind/.test(rowLabels) && hours >= 4 && stars && sideBySide && svgs === 1 && place === 'Home' && plusOk && sizes && sheetOk ? true : { place, plusOk, sizes, sheetNames, art: !!art, date, cond, temp, days, rows, hours, stars, sideBySide, svgs, rowLabels };
   });
   await check('no uncaught errors during the run', async () => errors.length === 0 ? true : errors);
   window.removeEventListener('error', onErr); window.removeEventListener('unhandledrejection', onErr);

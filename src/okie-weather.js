@@ -473,7 +473,7 @@
       var now = new Date(), a = v.a;
       var dtxt; try { dtxt = now.toLocaleDateString(lang, Object.assign({ weekday: 'long', month: 'long', day: 'numeric' }, v.tz ? { timeZone: v.tz } : {})); } catch (e) { dtxt = now.toLocaleDateString(lang, { weekday: 'long', month: 'long', day: 'numeric' }); }      // a city's own date
       date.textContent = dtxt; date2.textContent = dtxt;
-      var name = titleText(cur), arrow = !cur && isHome() && name !== placeName(item.name) ? 1 : 0;
+      var name = titleText(cur);
       [loc, loc2].forEach(function (b) { b.innerHTML = ''; if (!cur && isHome()) b.appendChild(h('span.wxd-arrow', { html: UI.icon('pin', 18) })); b.appendChild(document.createTextNode(name)); b.classList.add('pick'); b.title = tx(lang, 'tap_place'); });
       cond.textContent = condText(lang, v.state);
       temp.textContent = a.temperature != null ? Math.round(a.temperature) + '°' : '–';

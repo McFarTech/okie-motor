@@ -173,8 +173,9 @@
 
     // ---- Appearance ----
     { id: 'ui_scale', tab: 'appearance', group: DESIGN, type: 'slider', path: 'scale', min: 50, max: 130, step: 1, unit: '%', commit: 'release', mobileMin: 70, mobileMax: 100, label: yes('Content size', 'Größe der Oberfläche'), desc: yes('Menu, search bar and cards scale together, the background stays. 100% is the size of Fast Search Card. Phones go from 70% to 100%. Saved on this device only.', 'Menü, Suchleiste und Karten skalieren gemeinsam, der Hintergrund bleibt. 100 % ist die Größe von Fast Search Card. Auf dem Handy von 70 % bis 100 %. Wird nur auf diesem Gerät gespeichert.') },
+    { id: 'tidy_names', tab: 'appearance', group: DESIGN, type: 'toggle', path: 'tidyNames', label: yes('Short device names', 'Kurze Gerätenamen'), desc: yes('When Home Assistant joins a device\'s name and its entity\'s ("Living Room TV Television"), show the device\'s name ("Living Room TV"). Devices with several entities of a kind keep their full names, and a name you gave a device always wins.', 'Wenn Home Assistant Geräte- und Entitätsnamen verbindet („Wohnzimmer TV Fernseher“), den Gerätenamen zeigen („Wohnzimmer TV“). Geräte mit mehreren Entitäten einer Art behalten ihre vollen Namen, und ein selbst vergebener Name hat immer Vorrang.') },
     { id: 'ha_icons', tab: 'appearance', group: DESIGN, type: 'toggle', path: 'haIcons', label: yes('Home Assistant icons', 'Home-Assistant-Symbole'), desc: yes('Devices you gave an icon in Home Assistant show that icon instead of the drawing. An icon chosen on the device screen (pencil > Icon) always wins.', 'Geräte, denen du in Home Assistant ein Symbol gegeben hast, zeigen dieses statt der Zeichnung. Ein auf dem Gerätebildschirm gewähltes Symbol (Stift > Symbol) hat immer Vorrang.') },
-    { id: 'animara_key', tab: 'appearance', group: DESIGN, type: 'text', path: 'animaraKey', label: yes('Animara license key', 'Animara-Lizenzschlüssel'), desc: yes('Only for the full Animara pack: the key from your purchase email, so its icons can be chosen for your devices (pencil > Icon). The free sampler needs none.', 'Nur für das volle Animara-Paket: der Schlüssel aus deiner Kauf-E-Mail, damit seine Symbole für deine Geräte gewählt werden können (Stift > Symbol). Der kostenlose Sampler braucht keinen.') },
+    { id: 'animara_key', tab: 'appearance', group: DESIGN, type: 'text', secret: true, path: 'animaraKey', label: yes('Animara license key', 'Animara-Lizenzschlüssel'), desc: yes('Only for the full Animara pack: the key from your purchase email, so its icons can be chosen for your devices (pencil > Icon). The free sampler needs none.', 'Nur für das volle Animara-Paket: der Schlüssel aus deiner Kauf-E-Mail, damit seine Symbole für deine Geräte gewählt werden können (Stift > Symbol). Der kostenlose Sampler braucht keinen.') },
     { id: 'ui_textsize', tab: 'appearance', group: DESIGN, type: 'slider', path: 'textScale', min: 70, max: 140, step: 5, unit: '%', commit: 'release', label: yes('Text size', 'Textgröße'), desc: yes('Makes only the text bigger or smaller. Cards, menu and photo keep their size. 100% is the normal size. Saved on this device only.', 'Macht nur den Text größer oder kleiner. Karten, Menü und Foto behalten ihre Größe. 100 % ist die normale Größe. Gilt nur für dieses Gerät.') },
     { id: 'center_view', tab: 'appearance', group: DESIGN, type: 'toggle', path: 'centerView', label: yes('Center on the screen', 'In der Mitte des Bildschirms'), desc: yes('On a wide screen (iPad, desktop) the start screen and the lock page sit in the middle of the window instead of at the top. Saved on this device only.', 'Auf einem breiten Bildschirm (iPad, Desktop) liegen Startseite und Sperrseite in der Mitte des Fensters statt oben. Gilt nur für dieses Gerät.') },
     { id: 'bento_swap', tab: 'appearance', group: DESIGN, type: 'toggle', path: 'bento.swap', label: yes('Cameras above the slides', 'Kameras über den Folien'), desc: yes('On the start screen the cameras card sits above the sliding card (weather, tasks, news, calendar) instead of below it. Saved on this device only.', 'Auf der Startseite liegt die Kamerakarte über der Folienkarte (Wetter, Aufgaben, Nachrichten, Kalender) statt darunter. Gilt nur für dieses Gerät.') },
@@ -251,7 +252,7 @@
   if (typeof document === 'undefined') return;
 
   // ------------------------------------------------------------- UI ----
-  var UI = g.OkieMotor.ui, L = g.OkieMotor.logic, CT = g.OkieMotor.controls, core = g.OkieMotor.core;
+  var UI = g.OkieMotor.ui, CT = g.OkieMotor.controls, core = g.OkieMotor.core;
   var h = UI.h;
   g.OkieMotor.settingsRows = g.OkieMotor.settingsRows || [];
 
@@ -508,7 +509,6 @@
       var pg = PAGES[id];
       var list = rows().filter(function (r) { return r.page === id; });
       var links = (pg.links || []).map(function (l) { return { id: l, group: yes('', '') }; });
-      var n = into.children.length;
       drawGrouped(into, list, []);
       if (links.length) { var its = links.map(function (l) { return pageItem(l.id); }); into.appendChild(section('', its)); }
       var foot = pg.foot || null;
@@ -571,7 +571,7 @@
     }
     function textPage(row, b) {
       var v = getPath(settings(), row.path);
-      var inp = h('input.ios-input', { type: row.type === 'number' ? 'number' : 'text', value: v == null ? '' : String(v), placeholder: row.placeholder || '', 'aria-label': P(row.label), spellcheck: false, autocapitalize: 'off',
+      var inp = h('input.ios-input', { type: row.type === 'number' ? 'number' : (row.secret ? 'password' : 'text'), value: v == null ? '' : String(v), placeholder: row.placeholder || '', 'aria-label': P(row.label), spellcheck: false, autocapitalize: 'off', autocomplete: row.secret ? 'off' : null,
         onchange: function () { var nv = row.type === 'number' ? Math.max(row.min || 0, Math.min(row.max || 1e9, parseInt(inp.value, 10) || 0)) : inp.value.trim(); inp.value = String(nv); save(row, nv); } });
       b.appendChild(h('div.ios-section', null, inp)); if (row.desc) b.appendChild(h('div.ios-text', null, P(row.desc)));
     }

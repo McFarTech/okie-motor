@@ -158,9 +158,8 @@
   });
 
   // The scene is drawn in a 400 x 300 box that is kept at the right edge of the control: the wheel keeps its shape on a phone and on a wide screen.
-  var CX = 425, CY = 150, R_OUT = 150, R_TICK = 148, R_IN = 135, R_MAJOR = 127, SWEEP = 236, START = 64, TICKS = 130, MAJOR_EVERY = 5;
+  var CX = 425, CY = 150, R_OUT = 150, R_TICK = 148, R_IN = 135, R_MAJOR = 127, MAJOR_EVERY = 5;
   var RIM_R = R_OUT + 2.1;                              // the solid rim; the ticks end at R_TICK, a small gap (about 3 units, a quarter of a tick) inside its inner edge, as in the original project
-  var GLOW_SPREAD = 60;                                  // the glow reaches this far (scene units) inside and outside the rim; beyond it the Gaussian is below 1 %
   var SEND_DEBOUNCE_MS = 450, HOLD_MS = 3000, DRAG_SENS = .035, WHEEL_SENS = .01;
 
   var ICON = {

@@ -16,7 +16,6 @@
 (function (g) {
   'use strict';
   var isNode = typeof module !== 'undefined' && module.exports;
-  var core = isNode ? require('./okie-core.js') : g.OkieMotor.core;
   var L = isNode ? require('./okie-logic.js') : g.OkieMotor.logic;
 
   var SHIFTS = [[0, 0], [14, -10], [-12, 12], [10, 14], [-14, -8]];   // burn-in offsets, px

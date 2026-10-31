@@ -11,6 +11,7 @@
 
   var KEY = 'okie_motor_settings';
   var DEVICE_ONLY = ['scale', 'rest', 'top_offset'];      // the size and the screensaver belong to one screen
+  var PRIVATE = ['animaraKey'];      // never written into an exported file (a licence key is easy to share by accident); an import keeps the one you have
   var MAX_BYTES = 1024 * 1024;
 
   function clone(o) { return JSON.parse(JSON.stringify(o == null ? {} : o)); }
@@ -32,8 +33,11 @@
   /** The file: everything, also the one-screen settings, with a stamp. */
   function buildExport(user, meta) {
     meta = meta || {};
-    return { app: 'okie-motor', format: 1, version: String(meta.version || ''), exported: new Date(meta.now == null ? Date.now() : meta.now).toISOString(), settings: clone(user) };
+    var settings = clone(user); PRIVATE.forEach(function (k) { delete settings[k]; });
+    return { app: 'okie-motor', format: 1, version: String(meta.version || ''), exported: new Date(meta.now == null ? Date.now() : meta.now).toISOString(), settings: settings };
   }
+  /** The settings an import puts in place: the file's, plus your own private ones (the file never carries them). Pure, tested. */
+  function withPrivate(imported, localUser) { var o = clone(imported); PRIVATE.forEach(function (k) { if (o[k] === undefined && localUser && localUser[k] !== undefined) o[k] = clone(localUser[k]); }); return o; }
   /** Reads the text of an exported file: { ok, settings, exported, version, favorites, items } or { ok: false, error }. */
   function parseImport(text) {
     var s = String(text == null ? '' : text);
@@ -47,7 +51,7 @@
   function stamp(d) { var p = function (n) { return (n < 10 ? '0' : '') + n; }; d = d || new Date(); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
   function fileName(d) { return 'okie-motor-settings-' + stamp(d) + '.json'; }
 
-  var api = { KEY: KEY, DEVICE_ONLY: DEVICE_ONLY, shared: shared, deviceOnly: deviceOnly, combine: combine, size: size, firstSyncWinner: firstSyncWinner, buildExport: buildExport, parseImport: parseImport, fileName: fileName };
+  var api = { KEY: KEY, DEVICE_ONLY: DEVICE_ONLY, shared: shared, deviceOnly: deviceOnly, combine: combine, size: size, firstSyncWinner: firstSyncWinner, buildExport: buildExport, withPrivate: withPrivate, PRIVATE: PRIVATE, parseImport: parseImport, fileName: fileName };
   if (isNode) { module.exports = api; return; }
   if (typeof document === 'undefined') return;
 
@@ -148,7 +152,8 @@
         h('div.actrow', null,
           h('button.act', { onclick: close }, ctx.t ? ctx.t('card.close') : 'Cancel'),
           h('button.act.danger', { onclick: function () {
-            if (live) { live.applyUser(r.settings); live.pushNow(); } else { ctx.settings.reset(); ctx.settings.set(r.settings); }
+            var next = withPrivate(r.settings, userOf(ctx));
+            if (live) { live.applyUser(next); live.pushNow(); } else { ctx.settings.reset(); ctx.settings.set(next); }
             ctx.toast('success', say(ctx, 'Settings imported', 'Einstellungen importiert')); close();
           } }, say(ctx, 'Import', 'Importieren'))));
     } });

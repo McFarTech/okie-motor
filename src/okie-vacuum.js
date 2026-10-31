@@ -238,7 +238,7 @@
   }
 
   function render(ctx, item, o) {
-    var t = T(ctx), alive = true, reg = {}, hs0 = ctx.hass();
+    var t = T(ctx), alive = true, reg = {};
     var features = ((ctx.state(item.id) || {}).attributes || {}).supported_features || 0;
     var art = robot(), stateEl = h('div.vc-state'), subEl = h('div.vc-sub'), batEl = h('div.vc-bat');
     var head = h('div.vc-head', null, stateEl, h('div.vc-line', null, subEl, batEl));

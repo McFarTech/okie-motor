@@ -149,7 +149,7 @@
   if (typeof document === 'undefined') return;
 
   // ------------------------------------------------------------ DOM ----
-  var UI = g.OkieMotor.ui, core = g.OkieMotor.core, CT = g.OkieMotor.controls, h = UI.h;
+  var UI = g.OkieMotor.ui, core = g.OkieMotor.core, h = UI.h;
 
   core.registerStrings('en', {
     'vs.favorite': 'Favorite', 'vs.type': 'Type', 'vs.type_rooms': 'Rooms', 'vs.type_command': 'Command', 'vs.rooms': 'Rooms', 'vs.rooms_all': 'Nothing picked: every room.', 'vs.mode': 'Mode', 'vs.mode_default': 'As set on the robot',
@@ -216,7 +216,6 @@
     function allJobs() { return [{ id: 'clean', kind: 'vacuum', builtin: true }, { id: 'dock', kind: 'dock', builtin: true }].concat(listed()); }
     function canRooms() { var x = xt(); return !!(x.zoneSel && (x.rooms.length || x.zones.length)); }
     function jobName(j) { return j.builtin ? t('vs.job_' + j.id) : j.name; }
-    function jobKindLabel(j) { return j.id === 'dock' ? t('vs.job_dock') : (j.builtin ? t('vs.job_clean') : t('vs.k.' + j.kind)); }
     function clock(hhmm) {
       var m = /^(\d\d):(\d\d)/.exec(hhmm || ''); if (!m) return hhmm || '';
       var tf = ctx.settings.get().timeFormat, o = { hour: 'numeric', minute: '2-digit' };
