@@ -2,6 +2,13 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.307 (2026-10-31)
+
+**One way to choose an icon, everywhere.**
+- A device, the Music screen and a room all work the same: tap the pencil, then Icon. The same sheet opens: Animara's animated icons, the card's icons, any Home Assistant icon, and Original icon
+- Rooms can have an Animara icon too: it moves with the first device of the room. A room's picture is now in the same sheet
+- The Music screen has the pencil of a device screen instead of the star
+
 ## 0.55.306 (2026-10-30)
 
 **No cover? Your icon instead.**

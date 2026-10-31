@@ -206,8 +206,17 @@
     // the big picture on the left: the icon you chose for this player (an Animara one moves with it), else the note
     var heroIc = shell.el.querySelector('.dt-iconbg');
     function paintHero() { if (heroIc) UI.setIcon(heroIc, playerId ? UI.deviceIcon(playerId, 'music', 170) : UI.icon('music', 170)); }
-    var DT = g.OkieMotor.detail, iconBtn = DT && DT.openIconPicker ? h('button.dt-circ', { type: 'button', 'aria-label': t('dt.icon'), title: t('dt.icon'), html: UI.icon('star', 20), onclick: function () { if (playerId) DT.openIconPicker(ctx, playerId, function () { paintHero(); if (art.classList.contains('noimg')) showArt(); }); } }) : null;
-    if (iconBtn && heart && heart.parentNode) heart.parentNode.insertBefore(iconBtn, heart);      // the heart pins the player to the favorites, like the heart in every device screen
+    // the pencil, as on every device screen: it shows the bar at the bottom of the picture with Icon and Done
+    var DT = g.OkieMotor.detail, dtRoot = shell.el.classList.contains('dt') ? shell.el : shell.el.querySelector('.dt');
+    function setEdit(on) { if (!dtRoot) return; dtRoot.dataset.edit = on ? '1' : ''; penBtn.classList.toggle('ed', on); penBtn.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+    var penBtn = h('button.dt-circ', { type: 'button', 'aria-label': t('dt.edit'), title: t('dt.edit'), 'aria-pressed': 'false', html: UI.icon('pencil', 20), onclick: function () { setEdit(!(dtRoot && dtRoot.dataset.edit === '1')); } });
+    if (DT && DT.openIconPicker && heart && heart.parentNode) {
+      heart.parentNode.insertBefore(penBtn, heart);
+      var ebar = h('div.dt-ebar', null,
+        h('button.dt-eb', { type: 'button', html: UI.icon('star', 16) + '<span>' + t('dt.icon') + '</span>', onclick: function () { if (playerId) DT.openIconPicker(ctx, playerId, function () { paintHero(); if (art.classList.contains('noimg')) showArt(); }); } }),
+        h('button.dt-eb.pri', { type: 'button', onclick: function () { setEdit(false); } }, t('dt.done')));
+      if (dtRoot) dtRoot.appendChild(ebar);
+    }
     function paintHeart() { if (!heart) return; var on = !!(playerId && ctx.favorites.has(playerId)); heart.classList.toggle('on', on); heart.setAttribute('aria-pressed', on ? 'true' : 'false'); }
     var body = shell.body, root = h('div.mu'), call = function (svc, data) { return ctx.call('media_player', svc, Object.assign({ entity_id: playerId }, data || {})).catch(function () { ctx.toast('error', t('app.music')); }); };
 

@@ -18,7 +18,7 @@
   core.registerStrings('en', {
     'dt.controls': 'Controls', 'dt.context': 'Context', 'dt.history': 'History', 'dt.schedule': 'Schedule', 'dt.settings': 'Settings',
     'dt.related': 'Related', 'dt.same_area': 'In this room', 'dt.nothing_related': 'No scene, script or automation uses this device yet.', 'dt.nothing_related_hint': 'This tab lists the ones that do, and the scenes and scripts of its room, each with a Run button. Add one in Home Assistant that uses this device and it shows up here.', 'dt.run': 'Run', 'dt.running': 'Started',
-    'dt.edit': 'Edit this screen', 'dt.rename': 'Rename', 'dt.rename_orig': 'Original name', 'dt.rename_save': 'Save', 'dt.hero_hint': 'Drag to resize the picture', 'dt.hero_reset': 'Reset size', 'dt.done': 'Done', 'dt.icon': 'Icon', 'dt.icon_orig': 'Original icon', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Or any Home Assistant icon, like mdi:sofa', 'dt.icon_animara': 'Animara (animated)', 'dt.icon_animara_auto': 'Let Animara choose', 'dt.icon_animara_find': 'Find an Animara icon', 'dt.icon_more': '{n} more: type to find them',
+    'dt.edit': 'Edit this screen', 'dt.rename': 'Rename', 'dt.rename_orig': 'Original name', 'dt.rename_save': 'Save', 'dt.hero_hint': 'Drag to resize the picture', 'dt.hero_reset': 'Reset size', 'dt.done': 'Done', 'dt.icon': 'Icon', 'dt.icon_orig': 'Original icon', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Or any Home Assistant icon, like mdi:sofa', 'dt.icon_animara': 'Animara (animated)', 'dt.icon_card': 'Icons', 'dt.icon_picture': 'Or a picture (/local/... or https://...)', 'dt.icon_room_follows': 'They move with the first device of this room', 'dt.icon_animara_auto': 'Let Animara choose', 'dt.icon_animara_find': 'Find an Animara icon', 'dt.icon_more': '{n} more: type to find them',
     'dt.24h': '24 hours', 'dt.7d': '7 days', 'dt.30d': '30 days', 'dt.changes': 'Changes', 'dt.avg_run': 'Avg. on-time', 'dt.active': 'Active', 'dt.min': 'Min', 'dt.max': 'Max', 'dt.avg': 'Avg',
     'dt.by_hour': 'Time of day', 'dt.durations': 'Time in each state', 'dt.loading': 'Loading history…', 'dt.no_history': 'No history for this period.', 'dt.history_failed': 'Could not load history.',
     'dt.sched_none': 'No schedules for this device yet.', 'dt.sched_add': 'New schedule', 'dt.sched_time': 'Time', 'dt.sched_days': 'Days', 'dt.sched_action': 'Action', 'dt.sched_save': 'Save schedule',
@@ -32,7 +32,7 @@
   core.registerStrings('de', {
     'dt.controls': 'Steuerung', 'dt.context': 'Kontext', 'dt.history': 'Verlauf', 'dt.schedule': 'Zeitplan', 'dt.settings': 'Einstellungen',
     'dt.related': 'Zugehörig', 'dt.same_area': 'In diesem Raum', 'dt.nothing_related': 'Noch keine Szene, kein Skript und keine Automation nutzt dieses Gerät.', 'dt.nothing_related_hint': 'Dieser Tab zeigt die, die es nutzen, und die Szenen und Skripte seines Raums, jeweils mit einem Ausführen-Knopf. Lege in Home Assistant eine an, die dieses Gerät nutzt, und sie erscheint hier.', 'dt.run': 'Ausführen', 'dt.running': 'Gestartet',
-    'dt.edit': 'Diesen Bildschirm bearbeiten', 'dt.rename': 'Umbenennen', 'dt.rename_orig': 'Originalname', 'dt.rename_save': 'Speichern', 'dt.hero_hint': 'Ziehen, um das Bild zu verändern', 'dt.hero_reset': 'Größe zurücksetzen', 'dt.done': 'Fertig', 'dt.icon': 'Symbol', 'dt.icon_orig': 'Ursprüngliches Symbol', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Oder ein beliebiges Home-Assistant-Symbol, z. B. mdi:sofa', 'dt.icon_animara': 'Animara (animiert)', 'dt.icon_animara_auto': 'Animara wählen lassen', 'dt.icon_animara_find': 'Animara-Symbol suchen', 'dt.icon_more': '{n} weitere: tippe, um sie zu finden',
+    'dt.edit': 'Diesen Bildschirm bearbeiten', 'dt.rename': 'Umbenennen', 'dt.rename_orig': 'Originalname', 'dt.rename_save': 'Speichern', 'dt.hero_hint': 'Ziehen, um das Bild zu verändern', 'dt.hero_reset': 'Größe zurücksetzen', 'dt.done': 'Fertig', 'dt.icon': 'Symbol', 'dt.icon_orig': 'Ursprüngliches Symbol', 'dt.icon_mdi': 'mdi:sofa', 'dt.icon_mdi_hint': 'Oder ein beliebiges Home-Assistant-Symbol, z. B. mdi:sofa', 'dt.icon_animara': 'Animara (animiert)', 'dt.icon_card': 'Symbole', 'dt.icon_picture': 'Oder ein Bild (/local/... oder https://...)', 'dt.icon_room_follows': 'Sie bewegen sich mit dem ersten Gerät dieses Raums', 'dt.icon_animara_auto': 'Animara wählen lassen', 'dt.icon_animara_find': 'Animara-Symbol suchen', 'dt.icon_more': '{n} weitere: tippe, um sie zu finden',
     'dt.24h': '24 Stunden', 'dt.7d': '7 Tage', 'dt.30d': '30 Tage', 'dt.changes': 'Wechsel', 'dt.avg_run': 'Ø Einschaltdauer', 'dt.active': 'Aktiv', 'dt.min': 'Min', 'dt.max': 'Max', 'dt.avg': 'Ø',
     'dt.by_hour': 'Tageszeit', 'dt.durations': 'Zeit je Zustand', 'dt.loading': 'Verlauf wird geladen…', 'dt.no_history': 'Kein Verlauf in diesem Zeitraum.', 'dt.history_failed': 'Verlauf konnte nicht geladen werden.',
     'dt.sched_none': 'Noch keine Zeitpläne für dieses Gerät.', 'dt.sched_add': 'Neuer Zeitplan', 'dt.sched_time': 'Uhrzeit', 'dt.sched_days': 'Tage', 'dt.sched_action': 'Aktion', 'dt.sched_save': 'Zeitplan speichern',
@@ -521,50 +521,63 @@
     return { update: update, beforeClose: function () { return (tab === 'controls' && control && control.rollOut) ? control.rollOut() : null; }, dispose: function () { token++; if (wx) { wx.dispose(); if (wx.dots.parentNode) wx.dots.remove(); } if (active && active.dispose) active.dispose(); sbar.destroy(); vidA.removeAttribute('src'); vidB.removeAttribute('src'); } };
   }
 
-  /** The icon picker of a device (device screen > pencil > Icon, the Music screen): the card's icons, Animara's, or any Home Assistant icon. onSaved runs after a choice. */
-  function openIconPicker(ctx, id, onSaved) {
+  /** THE icon sheet, the same everywhere you choose an icon (a device, the Music screen, a room): Animara's animated icons (when installed and there is a device for
+   *  them to follow), the card's own icons, any Home Assistant icon, then whatever the place adds (a room's picture) and "Original icon".
+   *  o: { current, entity (the device an Animara icon follows; none = no Animara), auto (offer "Let Animara choose"), save(value) ('' = back to the original),
+   *       extra(box, close) (more rows), hasMore (a reset is offered also when only extra is set) } */
+  function openIconSheet(ctx, o) {
     var t = function (k, v) { return core.t(k, ctx.lang(), v); };
-    var ICON_CHOICES = UI.ICON_CHOICES.filter(function (n) { return !!UI.ICONS[n]; });
-    var own = (ctx.settings.get().deviceIcons || {})[id] || '', sheet = null;
-    function save(name) { var o = {}; o[id] = name; ctx.settings.set({ deviceIcons: o }); if (onSaved) onSaved(name); if (ctx.haptic) ctx.haptic(8); if (sheet) sheet.close('saved'); }
-    var grid = h('div.dt-icgrid', { style: { display: 'grid', gridTemplateColumns: 'repeat(6,minmax(38px,52px))', justifyContent: 'center', gap: '8px', marginBottom: '14px', width: '352px', maxWidth: '100%' } });
-    ICON_CHOICES.forEach(function (n) {
-      grid.appendChild(h('button', { type: 'button', 'aria-label': n, title: n, 'aria-pressed': own === n ? 'true' : 'false', onclick: function () { save(n); },
-        style: { aspectRatio: '1', minHeight: '38px', borderRadius: '14px', border: own === n ? '2px solid #fff' : '0', background: own === n ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }, html: UI.icon(n, 26) }));
-    });
+    var own = o.current || '', sheet = null;
+    function pick(v) { o.save(v); if (ctx.haptic) ctx.haptic(8); if (sheet) sheet.close('saved'); }
+    var label = function (k) { return h('div', { style: { fontSize: '13px', fontWeight: '700', margin: '4px 0 8px 4px' } }, t(k)); };
+    var hint = function (k) { return h('div', { style: { fontSize: '13px', opacity: '.75', margin: '0 0 6px 4px' } }, t(k)); };
     var box = h('div', null);
-    if (UI.animaraAvailable()) {      // Animara's animated icons, shown live in this device's own state
+    if (o.entity && UI.animaraAvailable()) {      // Animara's animated icons, shown live in the state of the device they follow
       var list = UI.animaraIcons(), aq = h('input.rm-q', { type: 'search', placeholder: t('dt.icon_animara_find'), 'aria-label': t('dt.icon_animara_find'), autocomplete: 'off', spellcheck: 'false' });
       var agrid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(4,minmax(64px,1fr))', gap: '8px', width: '352px', maxWidth: '100%', marginBottom: '6px' } }), amore = h('div', { style: { fontSize: '12px', opacity: '.65', margin: '0 0 12px 4px' } });
-      var aBtn = function (key, label) {
+      var aBtn = function (key, text) {
         var val = 'animara:' + key, sel = own === val, pic = h('span', { style: { width: '52px', height: '52px', display: 'block' } });
-        var b = h('button', { type: 'button', 'aria-pressed': sel ? 'true' : 'false', title: label, onclick: function () { save(val); },
-          style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '8px 4px', borderRadius: '14px', border: sel ? '2px solid #fff' : '0', background: sel ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', cursor: 'pointer', font: 'inherit', fontSize: '11px', lineHeight: '1.2', textAlign: 'center' } }, pic, h('span', null, label));
-        UI.setIcon(pic, UI.animaraSlot(id, key, 52));
+        var b = h('button', { type: 'button', 'aria-pressed': sel ? 'true' : 'false', title: text, onclick: function () { pick(val); },
+          style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', padding: '8px 4px', borderRadius: '14px', border: sel ? '2px solid #fff' : '0', background: sel ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', cursor: 'pointer', font: 'inherit', fontSize: '11px', lineHeight: '1.2', textAlign: 'center' } }, pic, h('span', null, text));
+        UI.setIcon(pic, UI.animaraSlot(o.entity, key, 52));
         return b;
       };
+      var first = o.auto ? 11 : 12;
       var drawA = function () {
         var q = aq.value.trim().toLowerCase(), hits = list.filter(function (x) { return !q || (x.name + ' ' + x.category + ' ' + x.key).toLowerCase().indexOf(q) >= 0; });
         agrid.innerHTML = '';
-        if (!q) agrid.appendChild(aBtn('auto', t('dt.icon_animara_auto')));
-        hits.slice(0, q ? 24 : 11).forEach(function (x) { agrid.appendChild(aBtn(x.key, x.name)); });
-        var rest = hits.length - (q ? 24 : 11); amore.textContent = rest > 0 ? t('dt.icon_more', { n: rest }) : '';
+        if (!q && o.auto) agrid.appendChild(aBtn('auto', t('dt.icon_animara_auto')));
+        hits.slice(0, q ? 24 : first).forEach(function (x) { agrid.appendChild(aBtn(x.key, x.name)); });
+        var rest = hits.length - (q ? 24 : first); amore.textContent = rest > 0 ? t('dt.icon_more', { n: rest }) : '';
       };
       var at = 0; aq.addEventListener('input', function () { clearTimeout(at); at = setTimeout(drawA, 150); });
-      box.appendChild(h('div', { style: { fontSize: '13px', fontWeight: '700', margin: '0 0 8px 4px' } }, t('dt.icon_animara')));
-      if (list.length > 11) box.appendChild(aq);
+      box.appendChild(label('dt.icon_animara'));
+      if (o.entityNote) box.appendChild(hint(o.entityNote));
+      if (list.length > first) box.appendChild(aq);
       box.appendChild(agrid); box.appendChild(amore); drawA();
     }
-    box.appendChild(grid);
+    var grid = h('div.dt-icgrid', { style: { display: 'grid', gridTemplateColumns: 'repeat(6,minmax(38px,52px))', justifyContent: 'center', gap: '8px', marginBottom: '14px', width: '352px', maxWidth: '100%' } });
+    UI.ICON_CHOICES.filter(function (n) { return !!UI.ICONS[n]; }).forEach(function (n) {
+      grid.appendChild(h('button', { type: 'button', 'aria-label': n, title: n, 'aria-pressed': own === n ? 'true' : 'false', onclick: function () { pick(n); },
+        style: { aspectRatio: '1', minHeight: '38px', borderRadius: '14px', border: own === n ? '2px solid #fff' : '0', background: own === n ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)', color: '#fff', display: 'grid', placeItems: 'center', cursor: 'pointer' }, html: UI.icon(n, 26) }));
+    });
+    box.appendChild(label('dt.icon_card')); box.appendChild(grid);
     if (UI.haIconAvailable()) {
-      var input = h('input.rm-q', { type: 'text', value: UI.isMdi(own) ? own : '', placeholder: t('dt.icon_mdi'), 'aria-label': t('dt.icon_mdi_hint'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
-      var ok = h('button.rm-mk', { type: 'button', onclick: function () { var v = input.value.trim().toLowerCase(); if (v && v.indexOf(':') < 0) v = 'mdi:' + v; if (!UI.isMdi(v)) { input.focus(); return; } save(v); } }, t('dt.rename_save'));
+      var input = h('input.rm-q', { type: 'text', value: UI.isMdi(own) && !UI.isAnimara(own) ? own : '', placeholder: t('dt.icon_mdi'), 'aria-label': t('dt.icon_mdi_hint'), autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false' });
+      var ok = h('button.rm-mk', { type: 'button', onclick: function () { var v = input.value.trim().toLowerCase(); if (v && v.indexOf(':') < 0) v = 'mdi:' + v; if (!UI.isMdi(v) || UI.isAnimara(v)) { input.focus(); return; } pick(v); } }, t('dt.rename_save'));
       input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); ok.click(); } });
-      box.appendChild(h('div', { style: { fontSize: '13px', opacity: '.75', margin: '0 0 6px 4px' } }, t('dt.icon_mdi_hint')));
+      box.appendChild(hint('dt.icon_mdi_hint'));
       box.appendChild(h('div.rm-newrow', null, input, ok));
     }
-    if (own) box.appendChild(h('button.rm-pr', { type: 'button', onclick: function () { save(''); } }, h('span.pt', null, h('b', null, t('dt.icon_orig')))));
+    if (o.extra) o.extra(box, function () { if (sheet) sheet.close('saved'); });
+    if (own || o.hasMore) box.appendChild(h('button.rm-pr', { type: 'button', onclick: function () { pick(''); } }, h('span.pt', null, h('b', null, t('dt.icon_orig')))));
     sheet = ctx.sheet({ title: t('dt.icon'), content: function () { return box; } });
+    return sheet;
+  }
+  /** The icon of a device (device screen > pencil > Icon, Music screen > pencil > Icon). onSaved runs after a choice. */
+  function openIconPicker(ctx, id, onSaved) {
+    return openIconSheet(ctx, { current: (ctx.settings.get().deviceIcons || {})[id] || '', entity: id, auto: true,
+      save: function (v) { var o = {}; o[id] = v; ctx.settings.set({ deviceIcons: o }); if (onSaved) onSaved(v); } });
   }
 
   function renderCompact(el, ctx, id) {
@@ -629,5 +642,5 @@
   ].join('\n');
   g.OkieMotor.extraCss = (g.OkieMotor.extraCss || []).concat([CSS]);
 
-  g.OkieMotor.detail = { openIconPicker: openIconPicker, createWheel: createWheel, render: render, renderCompact: renderCompact, prefetch: prefetch, sparkline: sparkline, CSS: CSS, _fetchHistory: fetchHistory };
+  g.OkieMotor.detail = { openIconSheet: openIconSheet, openIconPicker: openIconPicker, createWheel: createWheel, render: render, renderCompact: renderCompact, prefetch: prefetch, sparkline: sparkline, CSS: CSS, _fetchHistory: fetchHistory };
 })(typeof globalThis !== 'undefined' ? globalThis : window);
