@@ -48,10 +48,21 @@
     var fav = Array.isArray(o.settings.favorites) ? o.settings.favorites.length : 0;
     return { ok: true, settings: o.settings, exported: o.exported || '', version: o.version || '', favorites: fav, items: size(o.settings) };
   }
+  // One setup for every user: the admin who turns on "Everyone sees this setup" publishes it in Home Assistant's system data (only an admin can write it,
+  // every user can read it); the screens of the other users follow it. Their own sync switch stays theirs.
+  var SHARED_KEY = 'okie_motor_shared';
+  /** What the publisher puts out: the shared settings without its own sync switches. Pure, tested. */
+  function publishBlob(user) { var o = shared(user); delete o.sync; return o; }
+  /** What a follower's screen ends up with: the published setup, plus this screen's size and its own sync switches. Pure, tested. */
+  function followed(sharedData, localUser) {
+    var o = combine(sharedData, localUser); delete o.sync;
+    if (localUser && isPlain(localUser.sync)) { o.sync = clone(localUser.sync); delete o.sync.publish; }
+    return o;
+  }
   function stamp(d) { var p = function (n) { return (n < 10 ? '0' : '') + n; }; d = d || new Date(); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
   function fileName(d) { return 'okie-motor-settings-' + stamp(d) + '.json'; }
 
-  var api = { KEY: KEY, DEVICE_ONLY: DEVICE_ONLY, shared: shared, deviceOnly: deviceOnly, combine: combine, size: size, firstSyncWinner: firstSyncWinner, buildExport: buildExport, withPrivate: withPrivate, PRIVATE: PRIVATE, parseImport: parseImport, fileName: fileName };
+  var api = { SHARED_KEY: SHARED_KEY, publishBlob: publishBlob, followed: followed, KEY: KEY, DEVICE_ONLY: DEVICE_ONLY, shared: shared, deviceOnly: deviceOnly, combine: combine, size: size, firstSyncWinner: firstSyncWinner, buildExport: buildExport, withPrivate: withPrivate, PRIVATE: PRIVATE, parseImport: parseImport, fileName: fileName };
   if (isNode) { module.exports = api; return; }
   if (typeof document === 'undefined') return;
 
@@ -64,13 +75,42 @@
 
   api.mount = function (ctx) {
     var applying = false, pushTimer = 0, pulled = false, off = null, timer = 0;
-    status = { checked: 0, remoteT: 0, pushed: 0, error: '' };
+    status = { checked: 0, remoteT: 0, pushed: 0, error: '', follows: '', publishing: false, sharedError: '' };
     var noop = function () { return null; };
     function enabled() { var s = (ctx.settings.get().sync || {}); return s.enabled !== false; }
+    function me() { var hs = ctx.hass ? ctx.hass() : null; return hs && hs.user ? hs.user : {}; }
+    function publishing() { var s = (ctx.settings.get().sync || {}); return !!s.publish && !!me().is_admin; }
+    /** The admin's screen: puts this setup where every user's screen can read it. */
+    function publishNow() {
+      if (!publishing()) return Promise.resolve(null);
+      var u = me(), t = Date.now();
+      return ctx.callWS({ type: 'frontend/set_system_data', key: SHARED_KEY, value: { t: t, by: u.id || '', byName: u.name || '', data: publishBlob(userOf(ctx)) } })
+        .then(function () { status.publishing = true; status.sharedError = ''; return true; }, function (e) { status.publishing = false; status.sharedError = String((e && (e.code || e.message)) || 'failed'); return null; });
+    }
+    function unpublish() {
+      return ctx.callWS({ type: 'frontend/get_system_data', key: SHARED_KEY }).then(function (r) {
+        var v = r && r.value; if (!v || v.by !== me().id) return null;      // only the one who shares takes it back
+        return ctx.callWS({ type: 'frontend/set_system_data', key: SHARED_KEY, value: null });
+      }).then(function () { status.publishing = false; }, noop);
+    }
     function pushNow() {
       if (!enabled()) return Promise.resolve(null);
       var t = Date.now(); ctx.store.set('settings.t', t); status.pushed = t;
+      publishNow();
       return ctx.callWS({ type: 'frontend/set_user_data', key: KEY, value: { t: t, data: shared(userOf(ctx)) } }).catch(noop);
+    }
+    /** Another user's screen: takes the published setup when it is newer than the one it took last. true when something changed. */
+    function takeShared(v, force) {
+      status.follows = '';
+      if (!v || typeof v !== 'object' || !isPlain(v.data) || !v.by || v.by === me().id) return false;      // nothing published, or published from this very user
+      status.follows = v.byName || '?';
+      if (!force && (+v.t || 0) <= (+ctx.store.get('shared.t', 0) || 0)) return false;
+      applyUser(followed(v.data, userOf(ctx)));
+      ctx.store.set('shared.t', +v.t || Date.now()); ctx.store.set('rooms.t', Date.now());      // an older rooms copy of this user must not win over it afterwards
+      return true;
+    }
+    function pullShared(force) {
+      return ctx.callWS({ type: 'frontend/get_system_data', key: SHARED_KEY }).then(function (r) { return takeShared(r && r.value, force); }, function () { status.follows = ''; return false; });      // an older Home Assistant has no system data: each user keeps their own
     }
     /** Replaces this screen's settings; the old ones are kept once in "settings.backup" so nothing is lost for good. */
     function applyUser(next, keepBackup) {
@@ -80,6 +120,12 @@
     }
     function pullNow(force) {
       if (!enabled() && !force) { pulled = true; return Promise.resolve(null); }
+      return pullShared(force).then(function (took) {
+        if (status.follows) { pulled = true; status.checked = Date.now(); status.error = ''; return took; }      // this user follows the published setup: their own copy is not used
+        return pullUser(force);
+      });
+    }
+    function pullUser(force) {
       return ctx.callWS({ type: 'frontend/get_user_data', key: KEY }).then(function (r) {
         var v = r && r.value, mine = shared(userOf(ctx)), t0 = +ctx.store.get('settings.t', 0) || 0;
         pulled = true; status.checked = Date.now(); status.remoteT = v && v.data ? +v.t || 0 : 0; status.error = '';
@@ -92,7 +138,8 @@
         return true;
       }, function (e) { pulled = true; status.checked = Date.now(); status.error = String((e && (e.message || e.code)) || 'failed'); return force ? Promise.reject(e) : null; });
     }
-    off = ctx.settings.on('change', function () {
+    off = ctx.settings.on('change', function (p) {
+      if (!applying && p && isPlain(p.sync) && p.sync.publish !== undefined) { if (p.sync.publish) publishNow(); else unpublish(); }      // Everyone sees this setup: on publishes at once, off takes it back
       if (applying || !pulled) return;                      // a first pull comes before any push, so a fresh screen never overwrites the shared copy
       clearTimeout(pushTimer); pushTimer = setTimeout(pushNow, 900);
     });
@@ -100,8 +147,14 @@
     document.addEventListener('visibilitychange', visible);
     timer = setInterval(pullNow, 5 * 60000);
     pullNow();
-    live = { ctx: ctx, pushNow: pushNow, applyUser: applyUser, pullNow: pullNow };
-    return { dispose: function () { if (off) off(); clearTimeout(pushTimer); clearInterval(timer); document.removeEventListener('visibilitychange', visible); if (live && live.ctx === ctx) live = null; } };
+    var unsub = null;      // a change the admin makes reaches the other users' screens at once, not only at the next pull
+    try {
+      var conn = ctx.hass && ctx.hass() && ctx.hass().connection;
+      if (conn && conn.subscribeMessage) conn.subscribeMessage(function (ev) { if (enabled() && pulled) takeShared(ev && ev.value); }, { type: 'frontend/subscribe_system_data', key: SHARED_KEY }).then(function (u) { unsub = u; }, noop);
+    } catch (e) { /* no live updates: the pulls still bring it */ }
+    if (publishing()) status.publishing = true;
+    live = { ctx: ctx, pushNow: pushNow, applyUser: applyUser, pullNow: pullNow, following: function () { return !!status.follows; } };
+    return { dispose: function () { if (unsub) { try { unsub(); } catch (e) { /* gone */ } } if (off) off(); clearTimeout(pushTimer); clearInterval(timer); document.removeEventListener('visibilitychange', visible); if (live && live.ctx === ctx) live = null; } };
   };
 
   // ------------------------------------------------------------ status / get now ----
@@ -112,13 +165,16 @@
     return (today ? '' : d.getDate() + '.' + (d.getMonth() + 1) + '. ') + p(d.getHours()) + ':' + p(d.getMinutes());
   }
   /** Settings > About > Backup & sync: who this screen is signed in as and when it last talked to Home Assistant, so two screens can be compared. */
+  api.following = function () { return !!(live && live.following && live.following()); };
   api.statusText = function (ctx) {
     ctx = ctx || (live && live.ctx); if (!ctx) return '–';
     var d = de(ctx), hs = ctx.hass ? ctx.hass() : null, user = hs && hs.user ? (hs.user.name || hs.user.id || '?') : '?';
     var mine = +ctx.store.get('settings.t', 0) || 0;
+    if (status.follows) return say(ctx, 'User ' + user + ' · shows the setup of ' + status.follows + ' (Everyone sees this setup) · checked ' + when(status.checked, d), 'Benutzer ' + user + ' · zeigt die Einrichtung von ' + status.follows + ' (Alle sehen diese Einrichtung) · geprüft ' + when(status.checked, d));
+    if (status.sharedError) return say(ctx, 'User ' + user + ' · could not share the setup with everyone (' + status.sharedError + '; needs an admin and a recent Home Assistant)', 'Benutzer ' + user + ' · Einrichtung konnte nicht geteilt werden (' + status.sharedError + '; braucht einen Admin und ein aktuelles Home Assistant)');
     if (status.error) return say(ctx, 'User ' + user + ' · could not reach Home Assistant (' + status.error + ')', 'Benutzer ' + user + ' · Home Assistant nicht erreicht (' + status.error + ')');
     return d ? 'Benutzer ' + user + ' · geteilte Kopie ' + when(status.remoteT, d) + ' · dieser Bildschirm ' + when(mine, d) + ' · geprüft ' + when(status.checked, d)
-             : 'User ' + user + ' · shared copy ' + when(status.remoteT, d) + ' · this screen ' + when(mine, d) + ' · checked ' + when(status.checked, d);
+             : 'User ' + user + ' · shared copy ' + when(status.remoteT, d) + ' · this screen ' + when(mine, d) + ' · checked ' + when(status.checked, d) + (status.publishing ? ' · every user sees this setup' : '');
   };
   /** Get settings from Home Assistant: replaces this screen's settings and rooms with the shared copy now (a backup of the old ones is kept). */
   api.pullNow = function (ctx) {
@@ -190,6 +246,6 @@
     } });
   };
 
-  g.OkieMotor.defaults = Object.assign(g.OkieMotor.defaults || {}, { sync: { enabled: true } });
+  g.OkieMotor.defaults = Object.assign(g.OkieMotor.defaults || {}, { sync: { enabled: true, publish: false } });
   g.OkieMotor.sync = api;
 })(typeof globalThis !== 'undefined' ? globalThis : window);

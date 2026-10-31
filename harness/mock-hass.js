@@ -181,7 +181,7 @@
     var hass = {
       states: states, entities: entities, areas: areas, devices: {},
       language: 'en', locale: { language: 'en' }, config: { unit_system: { temperature: '°C' }, time_zone: 'Europe/Berlin' },
-      user: { name: 'Alex', is_admin: true },
+      user: (g.__mockUser = g.__mockUser || { id: 'u-alex', name: 'Alex', is_admin: true }),
       formatEntityState: function (st) { var m = { partlycloudy: g.__lang === 'de' ? 'Teilweise bewölkt' : 'Partly cloudy', sunny: g.__lang === 'de' ? 'Sonnig' : 'Sunny' }; return m[st.state] || st.state; },
       services: { scheduler: { add: {}, remove: {}, edit: {} } },
       connection: { subscribeMessage: function (cb) {
@@ -323,6 +323,8 @@
         if (msg.type === 'config/entity_registry/get') return Promise.resolve({ entity_id: msg.entity_id, platform: msg.entity_id === 'media_player.living_room_tv' ? 'samsungtv' : 'cast', device_id: 'dev-' + msg.entity_id.split('.')[1] });
         if (msg.type === 'config/entity_registry/list') return Promise.resolve([{ entity_id: 'media_player.living_room_tv', platform: 'samsungtv', device_id: 'dev-living_room_tv' }, { entity_id: 'remote.living_room_tv', platform: 'samsungtv', device_id: 'dev-living_room_tv' }].concat(Object.keys(hass.states).filter(function (id) { return /(^|\.)robo(_|$)/.test(id); }).map(function (id) { return { entity_id: id, platform: 'roomba', device_id: 'dev-robo' }; })));
         if (msg.type === 'frontend/get_user_data') return Promise.resolve({ value: (g.__userData || {})[msg.key] || null });
+        if (msg.type === 'frontend/get_system_data') return Promise.resolve({ value: (g.__systemData || {})[msg.key] || null });
+        if (msg.type === 'frontend/set_system_data') { if (!(g.__mockUser || {}).is_admin) return Promise.reject({ code: 'unauthorized', message: 'Unauthorized' }); (g.__systemData = g.__systemData || {})[msg.key] = msg.value; return Promise.resolve(); }      // like Home Assistant: every user reads, only an admin writes
         if (msg.type === 'frontend/set_user_data') { (g.__userData = g.__userData || {})[msg.key] = msg.value; return Promise.resolve(); }
         var d = function (o) { return new Date(Date.now() + o * 86400e3).toISOString().slice(0, 10); };
         if (msg.type === 'todo/item/list') {

@@ -38,7 +38,7 @@
     limits: { max: 0, areaOnly: true, hideUnavailable: true },
     weather_entity: '', power_entity: '', weatherPlaces: [], weatherCities: [], weatherPlaceLookup: false, calendarColors: {}, calendarHidden: null,      // weatherPlaces: other weather entities you added on the weather screen (the + button)
     wallpaper: '', wallpaperView: false, bgMode: 'auto',
-    sync: { enabled: true },      // the same settings on every screen (okie-sync.js)
+    sync: { enabled: true, publish: false },      // the same settings on every screen (okie-sync.js)
     glass: { brightness: 100, blur: 20, contrast: 100, saturation: 100, grayscale: 0, tint: 76, cardBlur: 60, cardTint: 21, cardStyle: 'dark', cardEdge: 14 },      // cardBlur: frosted blur behind the device cards (px, 0 = clear); cardTint: how much light or dark tint they carry (%); cardStyle: light (white) or dark glass; cardEdge: the thin light rim that keeps clear glass readable (%)
     thermo: { glowBlur: 80, glowSpread: 15, glowOpacity: 65, ticks: 100, c0: '#1446be', c1: '#2d82ff', c2: '#ff962d', c3: '#ff2d55', cool: 69, warm: 75 },      // the Thermo Dial's look (okie-thermo.js DEFAULT_LOOK)
     toasts: { enabled: true, closable: false },

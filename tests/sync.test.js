@@ -56,3 +56,15 @@ test('a licence key never goes into an exported file, and an import keeps the on
   assert.equal(S2.withPrivate({ animaraKey: 'FILE' }, { animaraKey: 'MINE' }).animaraKey, 'FILE', 'an old file that carries a key still sets it');
   assert.equal(S2.withPrivate({}, {}).animaraKey, undefined);
 });
+
+test('one setup for every user: the admin publishes without its own switches, a follower keeps its size and switches', () => {
+  const admin = { favorites: ['light.a'], roomIcons: { r1: 'animara:tv' }, scale: 80, sync: { enabled: true, publish: true } };
+  const blob = Y.publishBlob(admin);
+  assert.equal(blob.sync, undefined, 'the publish switch is not handed out'); assert.equal(blob.scale, undefined, 'nor the size of the admin screen');
+  assert.deepEqual(blob.roomIcons, { r1: 'animara:tv' });
+  const phone = { favorites: ['x'], scale: 120, sync: { enabled: true, publish: true } };
+  const out = Y.followed(blob, phone);
+  assert.deepEqual(out.favorites, ['light.a']); assert.deepEqual(out.roomIcons, { r1: 'animara:tv' });
+  assert.equal(out.scale, 120, 'the phone keeps its own size'); assert.equal(out.sync.enabled, true); assert.equal(out.sync.publish, undefined, 'a follower never publishes');
+  assert.equal(admin.sync.publish, true, 'the original is untouched');
+});

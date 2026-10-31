@@ -2,6 +2,12 @@
 
 The same entries are shown inside the card (dock > What's new). Newest first.
 
+## 0.55.311 (2026-10-31)
+
+**One setup for every user.**
+- New in Settings > About > Backup & sync: Everyone sees this setup (admins). Turn it on in your admin account and every other Home Assistant user shows what you set there: rooms, icons, names, favorites, design. Changes reach their screens at once
+- Each screen keeps its own size; Sync status says whose setup a screen shows
+
 ## 0.55.310 (2026-10-31)
 
 **See which user a screen syncs as.**

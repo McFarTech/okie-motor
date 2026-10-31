@@ -1004,6 +1004,7 @@
     return ctx.callWS({ type: 'frontend/set_user_data', key: SYNC_KEY, value: { t: t, data: snapshot(ctx) } }).catch(function () { /* offline or no permission: the local copy still works */ });
   }
   function pullNow(ctx, force) {
+    if (g.OkieMotor.sync && g.OkieMotor.sync.following && g.OkieMotor.sync.following()) return Promise.resolve(null);      // this user follows the admin's published setup (rooms included)
     return ctx.callWS({ type: 'frontend/get_user_data', key: SYNC_KEY }).then(function (r) {
       var v = r && r.value;
       if (!v || typeof v !== 'object' || !v.data) { if (force) return false; if (hasData(snapshot(ctx))) return pushNow(ctx); return null; }      // nothing stored yet: this device's arrangement becomes the shared one
